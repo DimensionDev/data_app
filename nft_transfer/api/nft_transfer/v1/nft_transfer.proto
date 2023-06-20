@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package api.nft_transfer.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "nft_transfer/api/nft_transfer/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.nft_transfer.v1";
+
+service NftTransfer {
+	rpc GetNftTransfer (GetNftTransferRequest) returns (GetNftTransferReply){
+		option (google.api.http) = {
+			get: "/v1/nfttransfer/getnfttransfer"
+		};
+	};
+}
+
+message GetNftTransferRequest {
+	string twitterid = 1[(validate.rules).string.min_len = 1];
+	oneof optionalIsVerified {
+		bool isVerified = 2;
+	}
+}
+
+message GetNftTransferReply {
+	int32 code = 1;
+	string reason = 2;
+	string message = 3;
+	repeated string data = 4;
+}
