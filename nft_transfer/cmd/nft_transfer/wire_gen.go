@@ -24,17 +24,37 @@ import (
 
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
-	dataData, cleanup, err := data.NewData(confData, logger)
+	/*dataData, cleanup, err := data.NewData(confData, logger)
+	if err != nil {
+		return nil, nil, err
+	}*/
+
+	db, err := data.NewDataBase(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
+	client, cleanup, err := data.NewRedis(confData, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataData, cleanup2, err := data.NewData(confData, logger, db, client)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+
+
 	greeterRepo := data.NewGreeterRepo(dataData, logger)
 	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, logger)
 	greeterService := service.NewGreeterService(greeterUsecase)
-	grpcServer := server.NewGRPCServer(confServer, greeterService, logger)
-	httpServer := server.NewHTTPServer(confServer, greeterService, logger)
+	nftTransferRepo := data.NewNftTransferRepo(dataData, logger)
+	nftTransferUsecase := biz.NewNftTransferUsecase(nftTransferRepo, logger)
+	nftTransferService := service.NewNftTransferService(nftTransferUsecase, logger)
+	grpcServer := server.NewGRPCServer(confServer, greeterService, nftTransferService, logger)
+	httpServer := server.NewHTTPServer(confServer, greeterService, nftTransferService, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }

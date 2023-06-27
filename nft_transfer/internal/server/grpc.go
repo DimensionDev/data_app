@@ -2,6 +2,8 @@ package server
 
 import (
 	v1 "nft_transfer/api/helloworld/v1"
+	nv1 "nft_transfer/api/nft_transfer/v1"
+
 	"nft_transfer/internal/conf"
 	"nft_transfer/internal/service"
 
@@ -11,7 +13,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, greeter *service.GreeterService, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, greeter *service.GreeterService, nft *service.NftTransferService, logger log.Logger) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
@@ -28,5 +30,6 @@ func NewGRPCServer(c *conf.Server, greeter *service.GreeterService, logger log.L
 	}
 	srv := grpc.NewServer(opts...)
 	v1.RegisterGreeterServer(srv, greeter)
+	nv1.RegisterNftTransferServer(srv, nft)
 	return srv
 }

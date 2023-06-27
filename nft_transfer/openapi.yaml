@@ -43,14 +43,36 @@ paths:
                 - NftTransfer
             operationId: NftTransfer_GetNftTransfer
             parameters:
-                - name: twitterid
+                - name: owner
                   in: query
                   schema:
                     type: string
-                - name: isVerified
+                - name: chain
                   in: query
                   schema:
-                    type: boolean
+                    type: string
+                - name: type
+                  in: query
+                  schema:
+                    type: string
+                - name: orderBy
+                  in: query
+                  schema:
+                    type: string
+                - name: orderDirection
+                  in: query
+                  schema:
+                    type: string
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: cursor
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
             responses:
                 "200":
                     description: OK
@@ -76,7 +98,45 @@ components:
                 data:
                     type: array
                     items:
-                        type: string
+                        $ref: '#/components/schemas/api.nft_transfer.v1.PnftTransferSt'
+        api.nft_transfer.v1.PnftTransferSt:
+            type: object
+            properties:
+                nftId:
+                    type: string
+                chain:
+                    type: string
+                collectionId:
+                    type: string
+                transactionInitiator:
+                    type: string
+                blockNumber:
+                    type: integer
+                    format: uint64
+                blockHash:
+                    type: string
+                transactionHash:
+                    type: string
+                blockTimestamp:
+                    type: string
+                eventType:
+                    type: string
+                batchTransferIndex:
+                    type: integer
+                    format: uint32
+                contractAddress:
+                    type: string
+                tokenId:
+                    type: string
+                addressFrom:
+                    type: string
+                addressTo:
+                    type: string
+                quantity:
+                    type: integer
+                    format: uint64
+                saleDetails:
+                    type: string
         helloworld.v1.HelloReply:
             type: object
             properties:
