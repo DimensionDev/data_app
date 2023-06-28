@@ -125,7 +125,7 @@ type GetNftTransferReply struct {
 	Code    int32             `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
 	Reason  string            `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
 	Message string            `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
-	Data    []*PnftTransferSt `protobuf:"bytes,4,rep,name=data,proto3" json:"data,omitempty"`
+	Data    []*PnftTransferSt `protobuf:"bytes,4,rep,name=data,proto3" json:"data,omitempty"` //repeated PnftTransferSt data[] = 4;
 }
 
 func (x *GetNftTransferReply) Reset() {

@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"fmt"
 	pb "nft_transfer/api/nft_transfer/v1"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -26,8 +27,9 @@ func NewNftTransferUsecase(repo NftTransferRepo, logger log.Logger) *NftTransfer
 // GetHandleNftinfo
 func (uc *NftTransferUsecase) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 	res, err := uc.repo.GetHandleNftinfo(ctx, req)
-	if err != nil {
+	/*if err != nil {
 		return nil, err
-	}
-	return res, nil
+	}*/
+	fmt.Print("bizyyyyyyy:", res)
+	return res, err
 }

@@ -32,6 +32,7 @@ message GetNftTransferReply {
 	string reason = 2;
 	string message = 3;
 	repeated PnftTransferSt data = 4;
+	//repeated PnftTransferSt data[] = 4;
 }
 
 message PnftTransferSt{

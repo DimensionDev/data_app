@@ -53,6 +53,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 	handles, err := GetHandleNftinfoFromDB(r.data.DataBaseCli, req, sources)
 
 	fmt.Println(handles)
+	fmt.Print("hhhhh:", handles[1].AddressTo)
 
 	return &pb.GetNftTransferReply{
 		Code:    200,
@@ -65,7 +66,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest, sources *[]string) ([]*pb.PnftTransferSt, error) {
 
-	nftlist := make([]*pb.PnftTransferSt, 5, 5)
+	//nftlist := make([]*pb.PnftTransferSt, 5, 5)
 
 	res, err := db.Query("select " +
 		"nft_id," +
@@ -83,17 +84,19 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest, sour
 		"address_to," +
 		"quantity," +
 		"sale_details " +
-		"from transfer_nft_filter limit 10 ")
+		"from transfer_nft_filter limit 3")
 
 	if err != nil {
 		return nil, err
 	}
 
+	var nftlist []*pb.PnftTransferSt
 	for {
 		row, ok := res.NextRow()
 		if !ok {
 			break
 		}
+
 		fmt.Println(row)
 		var nts pb.PnftTransferSt
 		nts.NftId = row[0].(string)
@@ -136,6 +139,7 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest, sour
 		*/
 		fmt.Println(nts)
 		nftlist = append(nftlist, &nts)
+		fmt.Println("fffffff:", nftlist)
 	}
 
 	// Return an error if no data is found
