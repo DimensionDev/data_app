@@ -43,11 +43,11 @@ paths:
                 - NftTransfer
             operationId: NftTransfer_GetNftTransfer
             parameters:
-                - name: owner
+                - name: address
                   in: query
                   schema:
                     type: string
-                - name: chain
+                - name: network
                   in: query
                   schema:
                     type: string
@@ -85,6 +85,20 @@ components:
         api.helloworld.v1.GetDemoReply:
             type: object
             properties: {}
+        api.nft_transfer.v1.ActionStArr:
+            type: object
+            properties:
+                tag:
+                    type: string
+                type:
+                    type: string
+                index:
+                    type: integer
+                    format: uint32
+                addressFrom:
+                    type: string
+                addressTo:
+                    type: string
         api.nft_transfer.v1.GetNftTransferReply:
             type: object
             properties:
@@ -96,47 +110,43 @@ components:
                 message:
                     type: string
                 data:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/api.nft_transfer.v1.PnftTransferSt'
-        api.nft_transfer.v1.PnftTransferSt:
+                    $ref: '#/components/schemas/api.nft_transfer.v1.PnftTransferSt'
+        api.nft_transfer.v1.NodeStArr:
             type: object
             properties:
-                nftId:
+                timestamp:
                     type: string
-                chain:
+                hash:
                     type: string
-                collectionId:
-                    type: string
-                transactionInitiator:
-                    type: string
-                blockNumber:
-                    type: integer
-                    format: uint64
-                blockHash:
-                    type: string
-                transactionHash:
-                    type: string
-                blockTimestamp:
-                    type: string
-                eventType:
-                    type: string
-                batchTransferIndex:
-                    type: integer
-                    format: uint32
-                contractAddress:
-                    type: string
-                tokenId:
+                owner:
                     type: string
                 addressFrom:
                     type: string
                 addressTo:
                     type: string
-                quantity:
-                    type: integer
-                    format: uint64
-                saleDetails:
+                network:
                     type: string
+                tag:
+                    type: string
+                type:
+                    type: string
+                actions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.nft_transfer.v1.ActionStArr'
+        api.nft_transfer.v1.PnftTransferSt:
+            type: object
+            properties:
+                cursor:
+                    type: integer
+                    format: int32
+                total:
+                    type: integer
+                    format: int32
+                nodes:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.nft_transfer.v1.NodeStArr'
         helloworld.v1.HelloReply:
             type: object
             properties:

@@ -22,10 +22,8 @@ func NewNftTransferService(nftinfo *biz.NftTransferUsecase, logger log.Logger) *
 func (s *NftTransferService) GetNftTransfer(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 
 	res, err := s.uc.GetHandleNftinfo(ctx, req)
-
 	fmt.Print("server ddsfdfsdesfdfs:", res, err)
 	return res, nil
-
 	/*
 		return &pb.GetNftTransferReply{
 			Code:    200,

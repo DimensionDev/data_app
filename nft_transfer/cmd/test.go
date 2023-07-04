@@ -11,7 +11,7 @@ func main() {
 
 	//dsn := fmt.Sprintf("tcp://%s?region=%s&account=%s&user=%s&password=%s&secure=true&database=%s", host, region, account, user, password, dbname)
 
-	dsn := "tcp://gateway.aws-us-east-1.bytehouse.cloud:19000?account=AWSCOPZD&user=ksam&password=P@55word&secure=true&database=data_warehouse"
+	dsn := "tcp://gateway.aws-us-east-1.bytehouse.cloud:19000?account=AWS6R1TJ&user=jewen.han&password=Hwj521138=&secure=true&database=data_warehouse"
 	g, err := sdk.Open(context.Background(), dsn)
 	if err != nil {
 		panic(err)

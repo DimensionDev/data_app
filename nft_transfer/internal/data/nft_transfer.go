@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/bytehouse-cloud/driver-go/sdk"
 	pb "nft_transfer/api/nft_transfer/v1"
-	"time"
-
 	"nft_transfer/internal/biz"
+	"strings"
+	"time"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -18,24 +18,25 @@ type NftTransferRepo struct {
 	log  *log.Helper
 }
 
-type NftTransferSt struct {
-	Nft_id                string `json:"nft_id"`
-	Chain                 string `json:"chain"`
-	Collection_id         string `json:"collection_idstring"`
-	Transaction_initiator string `json:"block_number"`
-	Block_number          int64  `json:"block_number"`
-	Block_hash            string `json:"block_hash"`
-	Transaction_hash      string `json:"transaction_hash"`
-	Block_timestamp       string `json:"block_timestamp"`
-	Event_type            string `json:"bvent_type"`
-	Log_index             int32  `json:"log_index"`
-	Batch_transfer_index  int32  `json:"batch_transfer_index"`
-	Contract_address      string `json:"contract_address"`
-	Token_id              string `json:"token_id"`
-	Address_from          string `json:"address_from"`
-	Address_to            string `json:"address_to"`
-	Quantity              int32  `json:"quantity"`
-	Sale_details          string `json:"sale_details"`
+type NftTransfertmpSt struct {
+	contract_address string
+	network          string
+	init_address     string
+	event_type       string
+	hash             string
+	owner            string
+	tag              string
+	timestamp        string
+	actios           map[string]DataActionST
+}
+
+type DataActionST struct {
+	address_to   string
+	event_type   string
+	tag          string
+	address_from string
+	index        uint32
+	token_id     string
 }
 
 // NewNftTransferRepo .
@@ -48,104 +49,224 @@ func NewNftTransferRepo(data *Data, logger log.Logger) biz.NftTransferRepo {
 
 func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 
-	var sources *[]string = nil
+	handles, err := GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
 
-	handles, err := GetHandleNftinfoFromDB(r.data.DataBaseCli, req, sources)
+	if handles == nil {
+		return &pb.GetNftTransferReply{
+			Code:    500,
+			Reason:  "EROR",
+			Message: "query data fail",
+			Data:    nil,
+		}, err
+	}
 
-	fmt.Println(handles)
-	fmt.Print("hhhhh:", handles[1].AddressTo)
+	var data pb.PnftTransferSt
+	for _, nvalue := range handles {
+		var node pb.NodeStArr
+		node.AddressFrom = nvalue.init_address
+		node.Network = nvalue.network
+		node.AddressTo = nvalue.contract_address
+		node.Type = nvalue.event_type
+		node.Hash = nvalue.hash
+		node.Owner = nvalue.owner
+		node.Tag = nvalue.tag
+		node.Timestamp = nvalue.timestamp
+		for _, cvalue := range nvalue.actios {
+			var action pb.ActionStArr
+			action.Tag = cvalue.tag
+			action.AddressTo = cvalue.address_to
+			action.Type = cvalue.event_type
+			action.Index = cvalue.index
+			action.AddressFrom = cvalue.address_from
+			node.Actions = append(node.Actions, &action)
+		}
+		data.Nodes = append(data.Nodes, &node)
+	}
+	data.Total = int32(len(data.Nodes))
+	data.Cursor = req.Cursor + req.Limit
+	fmt.Println(data)
 
 	return &pb.GetNftTransferReply{
 		Code:    200,
 		Reason:  "SUCCESS",
 		Message: "SUCCESS",
-		Data:    handles,
+		Data:    &data,
 	}, err
 
 }
 
-func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest, sources *[]string) ([]*pb.PnftTransferSt, error) {
+func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, error) {
 
 	//nftlist := make([]*pb.PnftTransferSt, 5, 5)
+	if req.Address == "" {
+		return nil, errors.New("input address is empty")
+	}
 
-	res, err := db.Query("select " +
-		"nft_id," +
+	owners := strings.Split(req.Address, ",")
+
+	str_where := "where owner in ('"
+	for i, owner := range owners {
+		str_where += owner
+		if i == len(owners)-1 {
+			break
+		}
+		str_where += "','"
+	}
+	str_where += "')"
+
+	if req.Network != "" {
+		str_where += " and chain='" + req.Network + "'"
+	}
+
+	if req.Type != "" {
+		str_where += " and event_type='" + req.Type + "'"
+	}
+
+	//fmt.Print("order by:", req.OrderBy, req.OrderDirection)
+	if req.OrderBy != "" {
+		str_where += " order by " + req.OrderBy
+		if req.OrderDirection != "" {
+			str_where += " " + req.OrderDirection
+		}
+	}
+
+	if req.Limit > 0 {
+		if req.Cursor >= 0 {
+			str_where += fmt.Sprintf(" limit  %d,%d", req.Cursor, req.Limit+req.Cursor)
+			//str_where += " limit " + req.Limit
+		}
+	}
+
+	str_sql_p := "select distinct  " +
 		"chain, " +
-		"collection_id," +
 		"transaction_initiator," +
-		"block_number," +
-		"block_hash," +
 		"transaction_hash," +
 		"block_timestamp," +
 		"event_type," +
 		"log_index," +
-		"batch_transfer_index," +
+		"contract_address," +
+		"token_id," +
 		"address_from," +
 		"address_to," +
-		"quantity," +
-		"sale_details " +
-		"from transfer_nft_filter limit 3")
+		"owner " +
+		"from transfer_nft_filter "
+	str_sql_p += str_where
+
+	fmt.Print("sql:", str_sql_p, "\n")
+
+	res, err := db.Query(str_sql_p)
+
+	//fmt.Println("sql eeor:", res, err)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var nftlist []*pb.PnftTransferSt
+	var data_nodes map[string]NftTransfertmpSt
+	data_nodes = make(map[string]NftTransfertmpSt)
 	for {
 		row, ok := res.NextRow()
 		if !ok {
 			break
 		}
-
 		fmt.Println(row)
-		var nts pb.PnftTransferSt
-		nts.NftId = row[0].(string)
-		nts.Chain = row[1].(string)
-		nts.CollectionId = row[2].(string)
-		nts.TransactionInitiator = row[3].(string)
-		nts.BlockNumber = row[4].(uint64)
-		nts.BlockHash = row[5].(string)
-		nts.TransactionHash = row[6].(string)
-		nts.BlockTimestamp = row[7].(time.Time).String()
-		nts.EventType = row[8].(string)
-		//nts.log_index = row[9].(int32)
-		nts.BatchTransferIndex = row[10].(uint32)
 
-		if row[11] != nil {
-			nts.AddressFrom = row[11].(string)
-		}
-		nts.AddressTo = row[12].(string)
-		nts.Quantity = row[13].(uint64)
-		if row[14] != nil {
-			nts.SaleDetails = row[14].(string)
+		var node NftTransfertmpSt
+		if row[0] != nil {
+			node.network = row[0].(string)
+		} else {
+			node.network = ""
 		}
 
-		/*
-			nts.Nft_id = row[0].(string)
-			nts.Chain = row[1].(string)
-			nts.Collection_id = row[2].(string)
-			nts.Transaction_initiator = row[3].(string)
-			nts.Block_number = row[4].(int64)
-			nts.Block_hash = row[5].(string)
-			nts.Transaction_hash = row[6].(string)
-			nts.Block_timestamp = row[7].(string)
-			nts.Event_type = row[8].(string)
-			nts.Log_index = row[9].(int32)
-			nts.Batch_transfer_index = row[10].(int32)
-			nts.Address_from = row[11].(string)
-			nts.Address_to = row[12].(string)
-			nts.Quantity = row[13].(int32)
-			nts.Sale_details = row[14].(string)
-		*/
-		fmt.Println(nts)
-		nftlist = append(nftlist, &nts)
-		fmt.Println("fffffff:", nftlist)
+		if row[1] != nil {
+			node.init_address = row[1].(string)
+		} else {
+			node.init_address = ""
+		}
+
+		if row[2] != nil {
+			node.hash = row[2].(string)
+		} else {
+			node.hash = ""
+		}
+
+		if row[3] != nil {
+			node.timestamp = row[3].(time.Time).String()
+		} else {
+			node.timestamp = ""
+		}
+		if row[4] != nil {
+			node.event_type = row[4].(string)
+		} else {
+			node.event_type = ""
+		}
+
+		if row[6] != nil {
+			node.contract_address = row[6].(string)
+		} else {
+			node.contract_address = ""
+		}
+
+		if row[10] != nil {
+			node.owner = row[10].(string)
+		}
+
+		node.tag = "collectible"
+		node.actios = make(map[string]DataActionST)
+
+		node_ukey := node.network + node.init_address + node.hash + node.timestamp + node.event_type + node.owner
+		var action DataActionST
+		if row[8] != nil {
+			action.address_from = row[8].(string)
+		} else {
+			action.address_from = ""
+		}
+		if row[9] != nil {
+			action.address_to = row[9].(string)
+		} else {
+			action.address_to = ""
+		}
+
+		action.tag = "collectible"
+		if row[4] != nil {
+			action.event_type = row[4].(string)
+		} else {
+			action.event_type = ""
+		}
+
+		if row[5] != nil {
+			action.index = row[5].(uint32)
+		} else {
+			action.index = 0
+		}
+
+		if row[7] != nil {
+			action.token_id = row[7].(string)
+		} else {
+			action.token_id = ""
+		}
+
+		action_ukey := node.contract_address + action.token_id
+
+		if _, ok := data_nodes[node_ukey]; ok {
+
+			if _, ok := data_nodes[node_ukey].actios[action_ukey]; ok {
+
+			} else {
+				data_nodes[node_ukey].actios[action_ukey] = action
+			}
+
+		} else {
+			node.actios[action_ukey] = action
+			data_nodes[node_ukey] = node
+		}
+
 	}
 
 	// Return an error if no data is found
-	if len(nftlist) == 0 {
-		return nil, errors.New("no data")
+	if len(data_nodes) == 0 {
+		return nil, errors.New("no data in database ")
 	}
 
-	return nftlist, errors.New("success")
+	return data_nodes, errors.New("success")
 }

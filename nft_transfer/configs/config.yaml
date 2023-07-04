@@ -9,11 +9,12 @@ data:
   database:
     host: gateway.aws-us-east-1.bytehouse.cloud:19000
     region: US-EAST-1
-    account: AWSCOPZD
-    user: ksam
-    password: P@55word
+    account: AWS6R1TJ
+    user: jewen.han
+    password: Hwj521138=
     dbname: data_warehouse
   redis:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
+

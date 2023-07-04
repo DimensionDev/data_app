@@ -17,9 +17,10 @@ service NftTransfer {
 	};
 }
 
+
 message GetNftTransferRequest {
-	string owner = 1[(validate.rules).string.min_len = 1];
-	string chain=2;
+	string address = 1[(validate.rules).string.min_len = 1];
+	string network=2;
 	string type=3;
 	string order_by=4;
 	string order_direction=5;
@@ -31,25 +32,30 @@ message GetNftTransferReply {
 	int32 code = 1;
 	string reason = 2;
 	string message = 3;
-	repeated PnftTransferSt data = 4;
-	//repeated PnftTransferSt data[] = 4;
+	PnftTransferSt data = 4;
 }
 
-message PnftTransferSt{
-	string  nft_id=1;
-	string  chain=2;
-	string collection_id=3;
-	string transaction_initiator=4;
-	uint64  block_number=5;
-	string block_hash=6;
-	string transaction_hash=7;
-	string block_timestamp=8;
-	string event_type=9;
-	uint32  batch_transfer_index=10;
-	string contract_address =11;
-	string token_id=12;
-	string address_from=13;
-	string address_to=14;
-	uint64 quantity=15;
-	string sale_details=16;
+message PnftTransferSt {
+	int32  cursor = 1;
+	int32  total = 2;
+	repeated NodeStArr nodes = 3;
+}
+
+message NodeStArr {
+	string  timestamp = 1;
+	string  hash = 2;
+	string  owner = 3;
+	string  address_from=4;
+	string  address_to= 5;
+	string  network = 6;
+	string  tag= 7;
+	string  type= 8;
+	repeated ActionStArr actions = 9;
+}
+message ActionStArr {
+	string  tag= 1;
+	string  type= 2;
+	uint32  index=3;
+	string  address_from=4;
+	string  address_to= 5;
 }
