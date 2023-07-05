@@ -95,9 +95,9 @@ components:
                 index:
                     type: integer
                     format: uint32
-                addressFrom:
+                address_from:
                     type: string
-                addressTo:
+                address_to:
                     type: string
         api.nft_transfer.v1.GetNftTransferReply:
             type: object
@@ -120,9 +120,9 @@ components:
                     type: string
                 owner:
                     type: string
-                addressFrom:
+                address_from:
                     type: string
-                addressTo:
+                address_to:
                     type: string
                 network:
                     type: string
@@ -142,7 +142,7 @@ components:
                     format: int32
                 total:
                     type: integer
-                    format: int32
+                    format: uint64
                 nodes:
                     type: array
                     items:

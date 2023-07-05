@@ -49,7 +49,7 @@ func NewNftTransferRepo(data *Data, logger log.Logger) biz.NftTransferRepo {
 
 func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 
-	handles, err := GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
+	handles, total, err := GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
 
 	if handles == nil {
 		return &pb.GetNftTransferReply{
@@ -82,7 +82,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 		}
 		data.Nodes = append(data.Nodes, &node)
 	}
-	data.Total = int32(len(data.Nodes))
+	data.Total = total
 	data.Cursor = req.Cursor + req.Limit
 	//fmt.Println(data)
 
@@ -95,11 +95,11 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 }
 
-func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, error) {
+func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
 
 	//nftlist := make([]*pb.PnftTransferSt, 5, 5)
 	if req.Address == "" {
-		return nil, errors.New("input address is empty")
+		return nil, 0, errors.New("input address is empty")
 	}
 
 	owners := strings.Split(req.Address, ",")
@@ -123,16 +123,18 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 	}
 
 	//fmt.Print("order by:", req.OrderBy, req.OrderDirection)
+	str_order := ""
 	if req.OrderBy != "" {
-		str_where += " order by " + req.OrderBy
+		str_order += " order by " + req.OrderBy
 		if req.OrderDirection != "" {
-			str_where += " " + req.OrderDirection
+			str_order += " " + req.OrderDirection
 		}
 	}
 
+	str_limit := ""
 	if req.Limit > 0 {
 		if req.Cursor >= 0 {
-			str_where += fmt.Sprintf(" limit  %d,%d", req.Cursor, req.Limit+req.Cursor)
+			str_limit += fmt.Sprintf(" limit  %d,%d", req.Cursor, req.Limit+req.Cursor)
 			//str_where += " limit " + req.Limit
 		}
 	}
@@ -150,16 +152,28 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 		"address_to," +
 		"owner " +
 		"from transfer_nft_filter "
-	str_sql_p += str_where
+	str_sql_p += str_where + str_order + str_limit
 
-	fmt.Print("sql:", str_sql_p, "\n")
+	total_sql := "select count() from transfer_nft_filter  " + str_where
+
+	fmt.Print("str_sql:", str_sql_p, "\n")
+	fmt.Print("totalsql:", total_sql, "\n")
+
+	res1, err1 := db.Query(total_sql)
+	row1, ok1 := res1.NextRow()
+	var total uint64
+	total = 0
+	if ok1 {
+		total = row1[0].(uint64)
+	}
+	fmt.Println("sql total :", res1, err1, row1[0].(uint64), "\n")
 
 	res, err := db.Query(str_sql_p)
 
 	//fmt.Println("sql eeor:", res, err)
 
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 
 	var data_nodes map[string]NftTransfertmpSt
@@ -246,7 +260,13 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 			action.token_id = ""
 		}
 
-		action_ukey := node.contract_address + action.token_id + action.event_type + action.index
+		if action.event_type == "burn" {
+			action.address_to = "0x0000000000000000000000000000000000000000"
+		}
+
+		action_ukey := node.contract_address + action.token_id + action.event_type
+
+		action_ukey += fmt.Sprintf("%d", action.index)
 
 		if _, ok := data_nodes[node_ukey]; ok {
 
@@ -265,8 +285,8 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 
 	// Return an error if no data is found
 	if len(data_nodes) == 0 {
-		return nil, errors.New("no data in database ")
+		return nil, total, errors.New("no data in database ")
 	}
 
-	return data_nodes, errors.New("success")
+	return data_nodes, total, errors.New("success")
 }
