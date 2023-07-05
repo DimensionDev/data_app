@@ -46,9 +46,9 @@ message NodeStArr {
 	string  hash = 2;
 	string  owner = 3;
 	string  address_from=4;
-	string  address_to= 5;
-	string  network = 6;
-	string  tag= 7;
+	string  address_to=5;
+	string  network =6;
+	string  tag=7;
 	string  type= 8;
 	repeated ActionStArr actions = 9;
 }
@@ -57,5 +57,5 @@ message ActionStArr {
 	string  type= 2;
 	uint32  index=3;
 	string  address_from=4;
-	string  address_to= 5;
+	string  address_to=5;
 }

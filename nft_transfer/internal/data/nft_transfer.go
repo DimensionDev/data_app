@@ -84,7 +84,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 	}
 	data.Total = int32(len(data.Nodes))
 	data.Cursor = req.Cursor + req.Limit
-	fmt.Println(data)
+	//fmt.Println(data)
 
 	return &pb.GetNftTransferReply{
 		Code:    200,
@@ -214,7 +214,7 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 		node.tag = "collectible"
 		node.actios = make(map[string]DataActionST)
 
-		node_ukey := node.network + node.init_address + node.hash + node.timestamp + node.event_type + node.owner
+		node_ukey := node.network + node.init_address + node.hash + node.owner
 		var action DataActionST
 		if row[8] != nil {
 			action.address_from = row[8].(string)
@@ -246,7 +246,7 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 			action.token_id = ""
 		}
 
-		action_ukey := node.contract_address + action.token_id
+		action_ukey := node.contract_address + action.token_id + action.event_type + action.index
 
 		if _, ok := data_nodes[node_ukey]; ok {
 
