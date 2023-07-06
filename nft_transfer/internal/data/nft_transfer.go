@@ -122,6 +122,10 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 	str_where += "')"
 
 	if req.Network != "" {
+
+		if req.Network == "binance_smart_chain" {
+			req.Network = "bsc"
+		}
 		str_where += " and chain='" + req.Network + "'"
 	}
 
@@ -136,6 +140,8 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		if req.OrderDirection != "" {
 			str_order += " " + req.OrderDirection
 		}
+	} else {
+		str_order += " order by block_timestamp "
 	}
 
 	str_limit := ""
@@ -209,6 +215,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		var node NftTransfertmpSt
 		if row[0] != nil {
 			node.network = row[0].(string)
+			if node.network == "bsc" {
+				node.network = "binance_smart_chain"
+			}
 		} else {
 			node.network = ""
 		}
