@@ -139,11 +139,17 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 	}
 
 	str_limit := ""
-	if req.Limit > 0 {
-		if req.Cursor >= 0 {
-			str_limit += fmt.Sprintf(" limit  %d,%d", req.Cursor, req.Limit+req.Cursor)
+
+	limit_n := req.Limit
+	cursor_n := req.Cursor
+	if req.Limit <= 0 {
+		limit_n = 100
+		if req.Cursor <= 0 {
+			cursor_n = 0
 		}
 	}
+
+	str_limit += fmt.Sprintf(" limit  %d,%d", cursor_n, limit_n+cursor_n)
 
 	str_sql_p := "select distinct  " +
 		"chain, " +
