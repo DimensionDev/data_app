@@ -70,6 +70,13 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
 		fmt.Printf("error = %v", err)
 		return nil, nil
 	}
+
+	// Note first return value is sql.Result, which can be discarded since it is not implemented in the driver
+	/*
+		if _, err := db.Query("set default warehouse yiko_test_xl;"); err != nil {
+			log.NewHelper(logger).Errorf("set default warehouse error", err)
+		}*/
+
 	defer db.Close()
 
 	if err != nil {

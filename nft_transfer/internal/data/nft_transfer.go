@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bytehouse-cloud/driver-go/sdk"
+	"github.com/go-kratos/kratos/v2/log"
 	pb "nft_transfer/api/nft_transfer/v1"
 	"nft_transfer/internal/biz"
 	"strings"
 	"time"
-
-	"github.com/go-kratos/kratos/v2/log"
 )
 
 type NftTransferRepo struct {
@@ -49,7 +48,7 @@ func NewNftTransferRepo(data *Data, logger log.Logger) biz.NftTransferRepo {
 
 func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 
-	handles, total, err := GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
+	handles, total, err := r.GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
 
 	if handles == nil {
 		return &pb.GetNftTransferReply{
@@ -103,7 +102,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 }
 
-func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
+func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
 
 	//nftlist := make([]*pb.PnftTransferSt, 5, 5)
 	if req.Address == "" {
@@ -143,7 +142,6 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 	if req.Limit > 0 {
 		if req.Cursor >= 0 {
 			str_limit += fmt.Sprintf(" limit  %d,%d", req.Cursor, req.Limit+req.Cursor)
-			//str_where += " limit " + req.Limit
 		}
 	}
 
@@ -168,17 +166,22 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 	fmt.Print("totalsql:", total_sql, "\n")
 
 	res1, err1 := db.Query(total_sql)
-	row1, ok1 := res1.NextRow()
 	var total uint64
 	total = 0
+	if err1 != nil {
+		log.Errorf("query total  error", err1)
+		return nil, total, err1
+	}
+
+	row1, ok1 := res1.NextRow()
 	if ok1 {
 		total = row1[0].(uint64)
+	} else {
+		log.Errorf("query total  error")
+		return nil, total, nil
 	}
-	fmt.Println("sql total :", res1, err1, row1[0].(uint64), "\n")
 
 	res, err := db.Query(str_sql_p)
-
-	//fmt.Println("sql eeor:", res, err)
 
 	if err != nil {
 		return nil, total, err
@@ -293,7 +296,7 @@ func GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map
 
 	// Return an error if no data is found
 	if len(data_nodes) == 0 {
-		return nil, total, errors.New("no data in database ")
+		return nil, 0, errors.New("no data in database ")
 	}
 
 	return data_nodes, total, errors.New("success")
