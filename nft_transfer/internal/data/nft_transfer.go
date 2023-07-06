@@ -71,6 +71,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 		node.Owner = nvalue.owner
 		node.Tag = nvalue.tag
 		node.Timestamp = nvalue.timestamp
+
 		for _, cvalue := range nvalue.actios {
 			var action pb.ActionStArr
 			action.Tag = cvalue.tag
@@ -78,6 +79,13 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 			action.Type = cvalue.event_type
 			action.Index = cvalue.index
 			action.AddressFrom = cvalue.address_from
+
+			if node.Network == "ethereum" || node.Network == "gnosis" {
+				if node.AddressTo == "0x22c1f6050e56d2876009903609a2cc3fef83b415" {
+					node.Type = "poap"
+					action.Type = "poap"
+				}
+			}
 			node.Actions = append(node.Actions, &action)
 		}
 		data.Nodes = append(data.Nodes, &node)
