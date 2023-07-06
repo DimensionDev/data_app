@@ -2,7 +2,6 @@ package biz
 
 import (
 	"context"
-	"fmt"
 	pb "nft_transfer/api/nft_transfer/v1"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -30,6 +29,6 @@ func (uc *NftTransferUsecase) GetHandleNftinfo(ctx context.Context, req *pb.GetN
 	/*if err != nil {
 		return nil, err
 	}*/
-	fmt.Print("bizyyyyyyy:", res)
+	//fmt.Print("bizyyyyyyy:", res)
 	return res, err
 }
