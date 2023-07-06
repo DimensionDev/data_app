@@ -210,7 +210,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		if !ok {
 			break
 		}
-		fmt.Println(row)
+		//fmt.Println(row)
 
 		var node NftTransfertmpSt
 		if row[0] != nil {
