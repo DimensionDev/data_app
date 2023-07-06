@@ -87,7 +87,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 			}
 			node.Actions = append(node.Actions, &action)
 		}
-		data.Nodes = append(data.Nodes, &node)
+		data.Result = append(data.Result, &node)
 	}
 	data.Total = total
 	data.Cursor = req.Cursor + req.Limit
@@ -111,7 +111,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	owners := strings.Split(req.Address, ",")
 
-	str_where := "where owner in ('"
+	str_where := "where  batch_transfer_index = 0  and  owner in ('"
 	for i, owner := range owners {
 		str_where += owner
 		if i == len(owners)-1 {
@@ -149,9 +149,13 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		}
 	}
 
+	if limit_n > 1000 {
+		limit_n = 1000
+	}
+
 	str_limit += fmt.Sprintf(" limit  %d,%d", cursor_n, limit_n+cursor_n)
 
-	str_sql_p := "select distinct  " +
+	str_sql_p := "select  " +
 		"chain, " +
 		"transaction_initiator," +
 		"transaction_hash," +
@@ -166,7 +170,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		"from transfer_nft_filter "
 	str_sql_p += str_where + str_order + str_limit
 
-	total_sql := "select count() from transfer_nft_filter  " + str_where
+	total_sql := "select count(distinct(chain, transaction_hash, log_index) ) from transfer_nft_filter  " + str_where
 
 	fmt.Print("str_sql:", str_sql_p, "\n")
 	fmt.Print("totalsql:", total_sql, "\n")

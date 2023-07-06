@@ -38,7 +38,7 @@ message GetNftTransferReply {
 message PnftTransferSt {
 	int32  cursor = 1;
 	uint64 total = 2;
-	repeated NodeStArr nodes = 3;
+	repeated NodeStArr result = 3;
 }
 
 message NodeStArr {
