@@ -130,6 +130,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 	}
 
 	if req.Type != "" {
+		if req.Type == "trade" {
+			req.Type = "sale"
+		}
 		str_where += " and event_type='" + req.Type + "'"
 	}
 
@@ -263,12 +266,12 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		if row[8] != nil {
 			action.address_from = row[8].(string)
 		} else {
-			action.address_from = ""
+			action.address_from = "0x0000000000000000000000000000000000000000"
 		}
 		if row[9] != nil {
 			action.address_to = row[9].(string)
 		} else {
-			action.address_to = ""
+			action.address_to = "0x0000000000000000000000000000000000000000"
 		}
 
 		action.tag = "collectible"
@@ -292,6 +295,10 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		if action.event_type == "burn" {
 			action.address_to = "0x0000000000000000000000000000000000000000"
+		}
+
+		if action.event_type == "sale" {
+			action.event_type = "trade"
 		}
 
 		action_ukey := node.contract_address + action.token_id + action.event_type
