@@ -67,12 +67,12 @@ paths:
                   in: query
                   schema:
                     type: integer
-                    format: int32
+                    format: uint64
                 - name: cursor
                   in: query
                   schema:
                     type: integer
-                    format: int32
+                    format: uint64
             responses:
                 "200":
                     description: OK
@@ -139,7 +139,7 @@ components:
             properties:
                 cursor:
                     type: integer
-                    format: int32
+                    format: uint64
                 total:
                     type: integer
                     format: uint64

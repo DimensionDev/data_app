@@ -24,8 +24,8 @@ message GetNftTransferRequest {
 	string type=3;
 	string order_by=4;
 	string order_direction=5;
-	int32 limit=6;
-	int32 cursor=7;
+	uint64 limit=6;
+	uint64 cursor=7;
 }
 
 message GetNftTransferReply {
@@ -36,7 +36,7 @@ message GetNftTransferReply {
 }
 
 message PnftTransferSt {
-	int32  cursor = 1;
+	uint64  cursor = 1;
 	uint64 total = 2;
 	repeated NodeStArr result = 3;
 }

@@ -21,23 +21,8 @@ func main() {
 		panic(err)
 	}
 
-	str_sql := "select " +
-		"nft_id," +
-		"chain, " +
-		"collection_id," +
-		"transaction_initiator," +
-		"block_number," +
-		"block_hash," +
-		"transaction_hash," +
-		"block_timestamp," +
-		"event_type," +
-		"log_index," +
-		"batch_transfer_index," +
-		"address_from," +
-		"address_to," +
-		"quantity," +
-		"sale_details" +
-		" from transfer_nft_filter limit 10 "
+	str_sql := "select  chain, transaction_initiator,transaction_hash,block_timestamp,event_type,log_index,contract_address,token_id,address_from,address_to,owner "
+	str_sql += "from transfer_nft_filter where  batch_transfer_index = 0  and  owner in ('0x63c8e1155e2be1e10041ff56625805abcf1fbf9b') and chain='polygon' and event_type='mint' order by block_timestamp desc limit  1,4 "
 
 	fmt.Println(str_sql)
 	res, err := g.Query(str_sql)
