@@ -91,6 +91,10 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 	}
 	data.Total = total
 	data.Cursor = req.Cursor + req.Limit
+
+	if data.Cursor >= data.Total {
+		data.Cursor = data.Total
+	}
 	//fmt.Println(data)
 
 	return &pb.GetNftTransferReply{
@@ -198,27 +202,29 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		"owner " +
 		"from transfer_nft_filter "
 	str_sql_p += str_where + str_order + str_limit
-
-	total_sql := "select count(distinct(chain, transaction_hash, log_index) ) from transfer_nft_filter  " + str_where
-
 	fmt.Print("str_sql:", str_sql_p, "\n")
-	fmt.Print("totalsql:", total_sql, "\n")
-
-	res1, err1 := db.Query(total_sql)
 	var total uint64
 	total = 0
-	if err1 != nil {
-		log.Errorf("query aaatotal  error", err1)
-		return nil, total, err1
-	}
+	/*
+		total_sql := "select count(distinct(chain, transaction_hash, log_index) ) from transfer_nft_filter  " + str_where
 
-	row1, ok1 := res1.NextRow()
-	if ok1 {
-		total = row1[0].(uint64)
-	} else {
-		log.Errorf("query total  error", row1)
-		return nil, total, nil
-	}
+		fmt.Print("totalsql:", total_sql, "\n")
+
+		res1, err1 := r.data.data_query(total_sql)
+		var total uint64
+		total = 0
+		if err1 != nil {
+			log.Errorf("query aaatotal  error", err1)
+			return nil, total, err1
+		}
+
+		row1, ok1 := res1.NextRow()
+		if ok1 {
+			total = row1[0].(uint64)
+		} else {
+			log.Errorf("query total  error", row1)
+			return nil, total, nil
+		}*/
 
 	//ch := make(chan uint64)
 
@@ -226,7 +232,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	//go r.GetTotalFromDB(db, total_sql, &ch)
 
-	res, err := db.Query(str_sql_p)
+	res, err := r.data.data_query(str_sql_p)
 
 	if err != nil {
 		//fmt.Print("err fail 666666666666666")

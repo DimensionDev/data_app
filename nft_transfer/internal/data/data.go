@@ -72,12 +72,13 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
 	}
 
 	// Note first return value is sql.Result, which can be discarded since it is not implemented in the driver
+
 	/*
-		if _, err := db.Query("set default warehouse yiko_test_xl;"); err != nil {
-			log.NewHelper(logger).Errorf("set default warehouse error", err)
+		if _, err := db.Query("set allow_experimental_data_skipping_indices =1"); err != nil {
+			log.NewHelper(logger).Errorf("set allow_experimental_data_skipping_indices  error", err)
 		}*/
 
-	defer db.Close()
+	//defer db.Close()
 
 	if err != nil {
 		log.NewHelper(logger).Errorf("Failed to connect to database", err)
@@ -85,6 +86,11 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
 	}
 	log.NewHelper(logger).Info("Connected to DataBase!")
 	return db, nil
+}
+
+func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
+	//r.DataBaseCli.Ping()
+	return r.DataBaseCli.Query(str_sql)
 }
 
 func NewRedis(c *conf.Data, logger log.Logger) (*redis.Client, func(), error) {
