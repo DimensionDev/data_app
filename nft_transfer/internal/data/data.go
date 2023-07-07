@@ -89,7 +89,9 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
 }
 
 func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
-	r.DataBaseCli.Ping()
+	if r.DataBaseCli.Ping() != nil {
+		r.DataBaseCli.Clone()
+	}
 	return r.DataBaseCli.Query(str_sql)
 }
 
