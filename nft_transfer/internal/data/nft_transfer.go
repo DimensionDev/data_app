@@ -102,6 +102,23 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 }
 
+func (r *NftTransferRepo) GetTotalFromDB(db *sdk.Gateway, total_sql string, ch *chan uint64) error {
+	res1, err1 := db.Query(total_sql)
+	var total uint64
+	total = 0
+	if err1 == nil {
+		row1, ok1 := res1.NextRow()
+		if ok1 {
+			//u_total, _ := strconv.ParseUint(row1[0].(string), 10, 64)
+			total = row1[0].(uint64)
+		}
+	}
+	fmt.Print("go func in err ")
+	*ch <- total
+	fmt.Print("go func in err 1111 ")
+	return nil
+}
+
 func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
 
 	//nftlist := make([]*pb.PnftTransferSt, 5, 5)
@@ -162,6 +179,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		limit_n = 1000
 	}
 
+	req.Limit = limit_n
+	req.Cursor = cursor_n
+
 	str_limit += fmt.Sprintf(" limit  %d,%d", cursor_n, limit_n+cursor_n)
 
 	str_sql_p := "select  " +
@@ -188,7 +208,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 	var total uint64
 	total = 0
 	if err1 != nil {
-		log.Errorf("query total  error", err1)
+		log.Errorf("query aaatotal  error", err1)
 		return nil, total, err1
 	}
 
@@ -196,14 +216,23 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 	if ok1 {
 		total = row1[0].(uint64)
 	} else {
-		log.Errorf("query total  error")
+		log.Errorf("query total  error", row1)
 		return nil, total, nil
 	}
+
+	//ch := make(chan uint64)
+
+	//defer close(ch)
+
+	//go r.GetTotalFromDB(db, total_sql, &ch)
 
 	res, err := db.Query(str_sql_p)
 
 	if err != nil {
-		return nil, total, err
+		//fmt.Print("err fail 666666666666666")
+		//ttt := <-ch
+		//fmt.Print("err fail 77777777777", ttt)
+		return nil, 0, err
 	}
 
 	var data_nodes map[string]NftTransfertmpSt
@@ -322,8 +351,15 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	// Return an error if no data is found
 	if len(data_nodes) == 0 {
+		//fmt.Print("chanbnel aaaaaaaaaaaaaa\n")
+		//bbbb := <-ch
+		//fmt.Print("chanbnel aaaaaaaaaaaaaa", bbbb)
 		return nil, 0, errors.New("no data in database ")
 	}
+
+	//fmt.Print("chanbnel 11111111111111111111111111111\n")
+	//utotal := <-ch
+	//fmt.Print("chan value", utotal)
 
 	return data_nodes, total, errors.New("success")
 }
