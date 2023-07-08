@@ -88,9 +88,31 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
 	return db, nil
 }
 
+/*
+func func (r *Data) ReConn(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
+	//dsn := fmt.Sprintf("tcp://%s?region=%s&account=%s&user=%s&password=%s&secure=true&database=%s", host, region, account, user, password, dbname)
+	dsn := fmt.Sprintf("tcp://%s?account=%s&user=%s&password=%s&secure=true&database=%s", r.host, r.account, r.user, r.password, r.dbname)
+
+	db, err := sdk.Open(context.Background(), dsn)
+	if err != nil {
+		fmt.Printf("error = %v", err)
+		return nil, nil
+	}
+	if err != nil {
+		log.NewHelper(logger).Errorf("Failed to connect to database", err)
+		return nil, err
+	}
+	log.NewHelper(logger).Info("Connected to DataBase!")
+	return db, nil
+}
+*/
+
 func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
 	if r.DataBaseCli.Ping() != nil {
-		r.DataBaseCli.Clone()
+		fmt.Print("db has been closed")
+		tdb := r.DataBaseCli.Clone()
+		r.DataBaseCli.Close()
+		r.DataBaseCli = tdb
 	}
 	return r.DataBaseCli.Query(str_sql)
 }
