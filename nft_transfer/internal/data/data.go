@@ -22,6 +22,7 @@ type Data struct {
 	RedisCli *redis.Client
 	//DataBaseCli driver.Conn
 	DataBaseCli *sdk.Gateway
+	dc          *conf.Data
 }
 
 // NewData .
@@ -32,6 +33,7 @@ func NewData(c *conf.Data, logger log.Logger, dataBaseCli *sdk.Gateway, redisCli
 	return &Data{
 		DataBaseCli: dataBaseCli,
 		RedisCli:    redisCli,
+		dc:          c,
 	}, cleanup, nil
 }
 func NewDataBase(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
@@ -88,10 +90,9 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
 	return db, nil
 }
 
-/*
-func func (r *Data) ReConn(c *conf.Data, logger log.Logger) (*sdk.Gateway, error) {
+func (r *Data) Conn() (*sdk.Gateway, error) {
 	//dsn := fmt.Sprintf("tcp://%s?region=%s&account=%s&user=%s&password=%s&secure=true&database=%s", host, region, account, user, password, dbname)
-	dsn := fmt.Sprintf("tcp://%s?account=%s&user=%s&password=%s&secure=true&database=%s", r.host, r.account, r.user, r.password, r.dbname)
+	dsn := fmt.Sprintf("tcp://%s?account=%s&user=%s&password=%s&secure=true&database=%s", r.dc.Database.Host, r.dc.Database.Account, r.dc.Database.User, r.dc.Database.Password, r.dc.Database.Dbname)
 
 	db, err := sdk.Open(context.Background(), dsn)
 	if err != nil {
@@ -99,22 +100,24 @@ func func (r *Data) ReConn(c *conf.Data, logger log.Logger) (*sdk.Gateway, error
 		return nil, nil
 	}
 	if err != nil {
-		log.NewHelper(logger).Errorf("Failed to connect to database", err)
+		//log.NewHelper(logger).Errorf("Failed to connect to database", err)
+		fmt.Print("Failed to connect to database", err)
 		return nil, err
 	}
-	log.NewHelper(logger).Info("Connected to DataBase!")
+	//log.NewHelper(logger).Info("Connected to DataBase!")
+	fmt.Print("Connected to DataBase!")
 	return db, nil
 }
-*/
 
 func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
-	if r.DataBaseCli.Ping() != nil {
+	db, err := r.Conn()
+	if db == nil {
 		fmt.Print("db has been closed")
-		tdb := r.DataBaseCli.Clone()
-		r.DataBaseCli.Close()
-		r.DataBaseCli = tdb
+		return nil, err
 	}
-	return r.DataBaseCli.Query(str_sql)
+	res, qerr := r.DataBaseCli.Query(str_sql)
+	db.Close()
+	return res, qerr
 }
 
 func NewRedis(c *conf.Data, logger log.Logger) (*redis.Client, func(), error) {
