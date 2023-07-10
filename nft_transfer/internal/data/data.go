@@ -7,6 +7,8 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redis/redis"
 	"github.com/google/wire"
+	"time"
+
 	//"gorm.io/gorm"
 	"nft_transfer/internal/conf"
 	"os"
@@ -105,18 +107,20 @@ func (r *Data) Conn() (*sdk.Gateway, error) {
 		return nil, err
 	}
 	//log.NewHelper(logger).Info("Connected to DataBase!")
-	fmt.Print("Connected to DataBase!")
+	fmt.Print("Connected to DataBase!\n")
 	return db, nil
 }
 
 func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
+	fmt.Print(time.Now(), "\n")
 	db, err := r.Conn()
 	if db == nil {
 		fmt.Print("db has been closed")
 		return nil, err
 	}
 	res, qerr := r.DataBaseCli.Query(str_sql)
-	db.Close()
+	//db.Close()
+	fmt.Print(time.Now(), "\n")
 	return res, qerr
 }
 
