@@ -112,14 +112,31 @@ func (r *Data) Conn() (*sdk.Gateway, error) {
 }
 
 func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
+	/*
+		fmt.Print(time.Now(), "\n")
+		db, err := r.Conn()
+		if db == nil {
+			fmt.Print("db has been closed")
+			return nil, err
+		}
+		res, qerr := r.DataBaseCli.Query(str_sql)
+		db.Close()
+		fmt.Print(time.Now(), "\n")
+		return res, qerr
+	*/
+
 	fmt.Print(time.Now(), "\n")
-	db, err := r.Conn()
-	if db == nil {
-		fmt.Print("db has been closed")
-		return nil, err
+	if err := r.DataBaseCli.Ping(); err != nil {
+		// re-establish connection
+		db, connErr := r.Conn()
+		if db == nil {
+			return nil, connErr
+		}
+		_ = r.DataBaseCli.Close()
+		r.DataBaseCli = db
 	}
+
 	res, qerr := r.DataBaseCli.Query(str_sql)
-	//db.Close()
 	fmt.Print(time.Now(), "\n")
 	return res, qerr
 }
