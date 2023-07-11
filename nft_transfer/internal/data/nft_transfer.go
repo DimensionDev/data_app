@@ -200,7 +200,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		"address_from," +
 		"address_to," +
 		"owner " +
-		"from transfer_nft_filter "
+		"from transfer_nft_filter_index "
 	str_sql_p += str_where + str_order + str_limit
 	fmt.Print("str_sql:", str_sql_p, "\n")
 	var total uint64
