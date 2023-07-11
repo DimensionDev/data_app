@@ -99,6 +99,18 @@ components:
                     type: string
                 address_to:
                     type: string
+                cost:
+                    $ref: '#/components/schemas/api.nft_transfer.v1.CostSt'
+        api.nft_transfer.v1.CostSt:
+            type: object
+            properties:
+                symbol:
+                    type: string
+                value:
+                    type: string
+                decimals:
+                    type: integer
+                    format: uint32
         api.nft_transfer.v1.GetNftTransferReply:
             type: object
             properties:
