@@ -364,38 +364,20 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 	str_limit += fmt.Sprintf(" limit %d,%d", cursor_n, limit_n+cursor_n)
 
 	str_sql_p := "select " +
-
 		"chain, " +
-
 		"transaction_initiator," +
-
 		"transaction_hash," +
-
 		"block_timestamp," +
-
 		"event_type," +
-
 		"log_index," +
-
 		"contract_address," +
-
 		"token_id," +
-
 		"address_from," +
-
 		"address_to," +
-<<<<<<< HEAD
-		"owner " +
-		"from transfer_nft_filter_index "
-=======
-
 		"owner," +
-
 		"sale_details " +
+		"from transfer_nft_filter_index "
 
-		"from transfer_nft_filter "
-
->>>>>>> origin/fix_sale_detail_issue
 	str_sql_p += str_where + str_order + str_limit
 
 	fmt.Print("str_sql:", str_sql_p, "\n")
@@ -555,9 +537,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		}
 
 		if row[11] != nil {
-
 			node.sale_details = row[11].(string)
-
 		}
 
 		node.tag = "collectible"
