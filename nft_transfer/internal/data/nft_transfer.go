@@ -2,10 +2,9 @@ package data
 
 import (
 	"context"
+	"reflect"
 
 	"encoding/json"
-
-	"strconv"
 
 	"errors"
 
@@ -66,8 +65,6 @@ type DataActionST struct {
 	token_id string
 }
 
-// {"payment_token_id":"ethereum.native","name":"Ether","symbol":"ETH","address":null,"decimals":18}
-
 type PaymentToken struct {
 	Payment_token_id string `json:"payment_token_id"`
 
@@ -89,9 +86,9 @@ type SaleInfo struct {
 
 	Payment_token PaymentToken `json:"payment_token"`
 
-	Unit_price uint64 `json:"unit_price"`
+	Unit_price json.Number `json:"unit_price"`
 
-	Total_price uint64 `json:"total_price"`
+	Total_price json.Number `json:"total_price"`
 }
 
 // NewNftTransferRepo .
@@ -110,16 +107,28 @@ func NewNftTransferRepo(data *Data, logger log.Logger) biz.NftTransferRepo {
 func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 
 	handles, total, err := r.GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
+	if err != nil {
+		return &pb.GetNftTransferReply{
+
+			Code: 500,
+
+			Reason: err.Error(),
+
+			Message: err.Error(),
+
+			Data: nil,
+		}, err
+	}
 
 	if handles == nil {
 
 		return &pb.GetNftTransferReply{
 
-			Code: 500,
+			Code: 200,
 
-			Reason: "EROR",
+			Reason: "",
 
-			Message: "query data fail",
+			Message: "",
 
 			Data: nil,
 		}, err
@@ -162,11 +171,8 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 			} else {
 				var cost pb.CostSt
-				fmt.Println("test", sale_info.Payment_token.Symbol)
 				cost.Symbol = sale_info.Payment_token.Symbol
-
-				cost.Value = strconv.FormatUint(sale_info.Total_price, 10)
-
+				cost.Value = sale_info.Total_price.String()
 				cost.Decimals = sale_info.Payment_token.Decimals
 				action.Cost = &cost
 
@@ -249,7 +255,7 @@ func (r *NftTransferRepo) GetTotalFromDB(db *sdk.Gateway, total_sql string, ch *
 
 	}
 
-	fmt.Print("go func in err ")
+	fmt.Println("go func in err ", reflect.TypeOf(total))
 
 	*ch <- total
 
@@ -386,6 +392,15 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	total = 0
 
+	total_sql := "select count(distinct(chain, transaction_hash, log_index) ) from transfer_nft_filter " + str_where
+	fmt.Print("totalsql:", total_sql, "\n")
+	// res1, err1 := r.data.data_query(total_sql)
+	// if err1 != nil {
+	// 	log.Errorf("query aaatotal error", err1)
+	// 	return nil, total, err1
+	// }
+	// fmt.Println("totalsql:", res1.)
+	// total = res1
 	/*
 
 	   total_sql := "select count(distinct(chain, transaction_hash, log_index) ) from transfer_nft_filter " + str_where
@@ -426,11 +441,12 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	   }*/
 
-	//ch := make(chan uint64)
+	ch := make(chan uint64)
 
 	//defer close(ch)
 
-	//go r.GetTotalFromDB(db, total_sql, &ch)
+	go r.GetTotalFromDB(db, total_sql, &ch)
+	total = <-ch
 
 	res, err := r.data.data_query(str_sql_p)
 
@@ -636,8 +652,6 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	}
 
-	// Return an error if no data is found
-
 	if len(data_nodes) == 0 {
 
 		//fmt.Print("chanbnel aaaaaaaaaaaaaa\n")
@@ -646,7 +660,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		//fmt.Print("chanbnel aaaaaaaaaaaaaa", bbbb)
 
-		return nil, 0, errors.New("no data in database ")
+		return nil, 0, nil
 
 	}
 
@@ -656,6 +670,6 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	//fmt.Print("chan value", utotal)
 
-	return data_nodes, total, errors.New("success")
+	return data_nodes, total, nil
 
 }
