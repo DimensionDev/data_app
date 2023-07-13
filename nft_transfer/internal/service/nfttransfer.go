@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"github.com/go-kratos/kratos/v2/log"
 	"nft_transfer/internal/biz"
+
+	"github.com/go-kratos/kratos/v2/log"
 
 	pb "nft_transfer/api/nft_transfer/v1"
 )
@@ -22,8 +22,7 @@ func NewNftTransferService(nftinfo *biz.NftTransferUsecase, logger log.Logger) *
 func (s *NftTransferService) GetNftTransfer(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 
 	res, err := s.uc.GetHandleNftinfo(ctx, req)
-	fmt.Print("server ddsfdfsdesfdfs:", res, err)
-	return res, nil
+	return res, err
 	/*
 		return &pb.GetNftTransferReply{
 			Code:    200,
