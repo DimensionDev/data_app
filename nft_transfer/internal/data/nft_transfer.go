@@ -147,8 +147,6 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 		node.AddressTo = nvalue.contract_address
 
-		node.Type = nvalue.event_type
-
 		node.Hash = nvalue.hash
 
 		node.Owner = nvalue.owner
@@ -163,21 +161,26 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 			var sale_info SaleInfo
 
-			err := json.Unmarshal([]byte(nvalue.sale_details), &sale_info)
+			fmt.Println("sale detail :", reflect.TypeOf(nvalue.sale_details))
+			if &nvalue.sale_details != nil {
+				err := json.Unmarshal([]byte(nvalue.sale_details), &sale_info)
 
-			if err != nil {
+				if err != nil {
+					fmt.Println("sale detail :", reflect.TypeOf(nvalue.sale_details))
+					fmt.Println("sale details parsing error:", err)
 
-				fmt.Println("sale details parsing error:", err)
+				} else {
+					var cost pb.CostSt
+					cost.Symbol = sale_info.Payment_token.Symbol
+					cost.Value = sale_info.Total_price.String()
+					cost.Decimals = sale_info.Payment_token.Decimals
+					action.Cost = &cost
 
-			} else {
-				var cost pb.CostSt
-				cost.Symbol = sale_info.Payment_token.Symbol
-				cost.Value = sale_info.Total_price.String()
-				cost.Decimals = sale_info.Payment_token.Decimals
-				action.Cost = &cost
-
+				}
 			}
 
+			action.ContractAddress = nvalue.contract_address
+			action.TokenId = cvalue.token_id
 			action.Tag = cvalue.tag
 
 			action.AddressTo = cvalue.address_to
@@ -192,8 +195,6 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 				if node.AddressTo == "0x22c1f6050e56d2876009903609a2cc3fef83b415" {
 
-					node.Type = "poap"
-
 					action.Type = "poap"
 
 				}
@@ -204,6 +205,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 		}
 
+		node.Type = node.Actions[0].Type
 		data.Result = append(data.Result, &node)
 
 	}
@@ -303,7 +305,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		}
 
-		str_where += " and chain='" + req.Network + "'"
+		if !strings.Contains(strings.ToLower(req.Network), "all") {
+			str_where += " and chain='" + req.Network + "'"
+		}
 
 	}
 
@@ -327,15 +331,16 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		str_order += " order by " + req.OrderBy
 
-		if req.OrderDirection != "" {
+		if req.OrderDirection == "" {
 
-			str_order += " " + req.OrderDirection
-
+			req.OrderDirection = "desc"
 		}
+
+		str_order += " " + req.OrderDirection
 
 	} else {
 
-		str_order += " order by block_timestamp "
+		str_order += " order by block_timestamp desc"
 
 	}
 
@@ -367,7 +372,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	req.Cursor = cursor_n
 
-	str_limit += fmt.Sprintf(" limit %d,%d", cursor_n, limit_n+cursor_n)
+	str_limit += fmt.Sprintf(" limit %d,%d", req.Cursor, req.Limit)
 
 	str_sql_p := "select " +
 		"chain, " +
@@ -386,7 +391,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	str_sql_p += str_where + str_order + str_limit
 
-	fmt.Print("str_sql:", str_sql_p, "\n")
+	fmt.Println("str_sql:", str_sql_p)
 
 	var total uint64
 
@@ -476,7 +481,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		}
 
-		//fmt.Println(row)
+		fmt.Println("row", row)
 
 		var node NftTransfertmpSt
 
