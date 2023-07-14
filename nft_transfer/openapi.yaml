@@ -101,9 +101,9 @@ components:
                     type: string
                 cost:
                     $ref: '#/components/schemas/api.nft_transfer.v1.CostSt'
-                contractAddress:
+                contract_address:
                     type: string
-                tokenId:
+                token_id:
                     type: string
         api.nft_transfer.v1.CostSt:
             type: object
