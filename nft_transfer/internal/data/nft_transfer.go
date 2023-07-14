@@ -568,8 +568,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		node_ukey := node.network + node.init_address + node.hash + node.owner
 
 		var action DataActionST
+		fmt.Println("song:", reflect.TypeOf(row[8]))
 
-		if row[8] != nil {
+		if row[8] != nil && row[8] != "" {
 
 			action.address_from = row[8].(string)
 
@@ -579,7 +580,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		}
 
-		if row[9] != nil {
+		if row[9] != nil && row[9] != "" {
 
 			action.address_to = row[9].(string)
 

@@ -59,8 +59,8 @@ message ActionStArr {
 	string  address_from=4[json_name = "address_from"];
 	string  address_to=5[json_name = "address_to"];
 	CostSt cost = 6;
-	string contract_address = 7;
-	string token_id = 8;
+	string contract_address = 7[json_name = "contract_address"];
+	string token_id = 8[json_name = "token_id"];
 }
 
 message CostSt {
