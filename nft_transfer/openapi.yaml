@@ -154,11 +154,7 @@ components:
             type: object
             properties:
                 cursor:
-                    type: integer
-                    format: uint64
-                total:
-                    type: integer
-                    format: uint64
+                    type: string
                 result:
                     type: array
                     items:

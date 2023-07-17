@@ -20,6 +20,7 @@ import (
 
 	"strings"
 
+	"strconv"
 	"time"
 )
 
@@ -106,7 +107,7 @@ func NewNftTransferRepo(data *Data, logger log.Logger) biz.NftTransferRepo {
 
 func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 
-	handles, total, err := r.GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
+	handles, action_num, err := r.GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
 	if err != nil {
 		return &pb.GetNftTransferReply{
 
@@ -209,17 +210,12 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 	}
 
-	data.Total = total
+	if req.Limit == action_num {
 
-	data.Cursor = req.Cursor + req.Limit
-
-	if data.Cursor >= data.Total {
-
-		data.Cursor = data.Total
+		str := strconv.FormatUint(uint64(req.Cursor+req.Limit), 10)
+		data.Cursor = &str
 
 	}
-
-	//fmt.Println(data)
 
 	return &pb.GetNftTransferReply{
 
@@ -392,76 +388,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	fmt.Println("str_sql:", str_sql_p)
 
-	var total uint64
-
-	total = 0
-
-	total_sql := "select count(distinct(chain, transaction_hash, log_index) ) from transfer_nft_filter " + str_where
-	fmt.Print("totalsql:", total_sql, "\n")
-	// res1, err1 := r.data.data_query(total_sql)
-	// if err1 != nil {
-	// 	log.Errorf("query aaatotal error", err1)
-	// 	return nil, total, err1
-	// }
-	// fmt.Println("totalsql:", res1.)
-	// total = res1
-	/*
-
-	   total_sql := "select count(distinct(chain, transaction_hash, log_index) ) from transfer_nft_filter " + str_where
-
-
-
-	   fmt.Print("totalsql:", total_sql, "\n")
-
-
-
-	   res1, err1 := r.data.data_query(total_sql)
-
-	   var total uint64
-
-	   total = 0
-
-	   if err1 != nil {
-
-	   log.Errorf("query aaatotal error", err1)
-
-	   return nil, total, err1
-
-	   }
-
-
-
-	   row1, ok1 := res1.NextRow()
-
-	   if ok1 {
-
-	   total = row1[0].(uint64)
-
-	   } else {
-
-	   log.Errorf("query total error", row1)
-
-	   return nil, total, nil
-
-	   }*/
-
-	ch := make(chan uint64)
-
-	//defer close(ch)
-
-	go r.GetTotalFromDB(db, total_sql, &ch)
-	total = <-ch
-
 	res, err := r.data.data_query(str_sql_p)
 
 	if err != nil {
-
-		//fmt.Print("err fail 666666666666666")
-
-		//ttt := <-ch
-
-		//fmt.Print("err fail 77777777777", ttt)
-
 		return nil, 0, err
 
 	}
@@ -469,6 +398,8 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 	var data_nodes map[string]NftTransfertmpSt
 
 	data_nodes = make(map[string]NftTransfertmpSt)
+
+	var action_num uint64 = 0
 
 	for {
 
@@ -480,8 +411,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		}
 
-		fmt.Println("row", row)
-
+		action_num += 1
 		var node NftTransfertmpSt
 
 		if row[0] != nil {
@@ -621,12 +551,6 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		}
 
-		if action.event_type == "burn" {
-
-			action.address_to = "0x0000000000000000000000000000000000000000"
-
-		}
-
 		if action.event_type == "sale" {
 
 			action.event_type = "trade"
@@ -665,7 +589,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		//fmt.Print("chanbnel aaaaaaaaaaaaaa", bbbb)
 
-		return nil, 0, nil
+		return nil, action_num, nil
 
 	}
 
@@ -675,6 +599,6 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	//fmt.Print("chan value", utotal)
 
-	return data_nodes, total, nil
+	return data_nodes, action_num, nil
 
 }
