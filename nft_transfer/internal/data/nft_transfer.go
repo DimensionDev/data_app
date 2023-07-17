@@ -161,7 +161,6 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 			var sale_info SaleInfo
 
-			fmt.Println("sale detail :", reflect.TypeOf(nvalue.sale_details))
 			if &nvalue.sale_details != nil {
 				err := json.Unmarshal([]byte(nvalue.sale_details), &sale_info)
 
@@ -521,9 +520,10 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		}
 
+		const targetLayout = "2006-01-02T15:04:05Z"
 		if row[3] != nil {
 
-			node.timestamp = row[3].(time.Time).String()
+			node.timestamp = row[3].(time.Time).Format(targetLayout)
 
 		} else {
 
@@ -568,7 +568,6 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		node_ukey := node.network + node.init_address + node.hash + node.owner
 
 		var action DataActionST
-		fmt.Println("song:", reflect.TypeOf(row[8]))
 
 		if row[8] != nil && row[8] != "" {
 
