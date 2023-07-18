@@ -20,6 +20,7 @@ import (
 
 	"strings"
 
+	"sort"
 	"strconv"
 	"time"
 )
@@ -139,7 +140,6 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 	var data pb.PnftTransferSt
 
 	for _, nvalue := range handles {
-
 		var node pb.NodeStArr
 
 		node.AddressFrom = nvalue.init_address
@@ -156,10 +156,16 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 		node.Timestamp = nvalue.timestamp
 
+		node.Type = nvalue.event_type
+		if node.Network == "ethereum" || node.Network == "gnosis" {
+			if node.AddressTo == "0x22c1f6050e56d2876009903609a2cc3fef83b415" {
+				node.Type = "poap"
+			}
+		}
+
 		for _, cvalue := range nvalue.actios {
 
 			var action pb.ActionStArr
-
 			var sale_info SaleInfo
 
 			if &nvalue.sale_details != nil {
@@ -175,38 +181,23 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 					cost.Value = sale_info.Total_price.String()
 					cost.Decimals = sale_info.Payment_token.Decimals
 					action.Cost = &cost
-
 				}
 			}
 
 			action.ContractAddress = nvalue.contract_address
 			action.TokenId = cvalue.token_id
 			action.Tag = cvalue.tag
-
 			action.AddressTo = cvalue.address_to
-
-			action.Type = cvalue.event_type
-
+			action.Type = node.Type
 			action.Index = cvalue.index
-
 			action.AddressFrom = cvalue.address_from
-
-			if node.Network == "ethereum" || node.Network == "gnosis" {
-
-				if node.AddressTo == "0x22c1f6050e56d2876009903609a2cc3fef83b415" {
-
-					action.Type = "poap"
-
-				}
-
-			}
-
 			node.Actions = append(node.Actions, &action)
-
 		}
 
-		node.Type = node.Actions[0].Type
 		data.Result = append(data.Result, &node)
+		sort.Slice(data.Result, func(i int, j int) bool {
+			return data.Result[i].Timestamp > data.Result[j].Timestamp
+		})
 
 	}
 
@@ -230,37 +221,37 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 }
 
-func (r *NftTransferRepo) GetTotalFromDB(db *sdk.Gateway, total_sql string, ch *chan uint64) error {
+// func (r *NftTransferRepo) GetTotalFromDB(db *sdk.Gateway, total_sql string, ch *chan uint64) error {
 
-	res1, err1 := db.Query(total_sql)
+// 	res1, err1 := db.Query(total_sql)
 
-	var total uint64
+// 	var total uint64
 
-	total = 0
+// 	total = 0
 
-	if err1 == nil {
+// 	if err1 == nil {
 
-		row1, ok1 := res1.NextRow()
+// 		row1, ok1 := res1.NextRow()
 
-		if ok1 {
+// 		if ok1 {
 
-			//u_total, _ := strconv.ParseUint(row1[0].(string), 10, 64)
+// 			//u_total, _ := strconv.ParseUint(row1[0].(string), 10, 64)
 
-			total = row1[0].(uint64)
+// 			total = row1[0].(uint64)
 
-		}
+// 		}
 
-	}
+// 	}
 
-	fmt.Println("go func in err ", reflect.TypeOf(total))
+// 	fmt.Println("go func in err ", reflect.TypeOf(total))
 
-	*ch <- total
+// 	*ch <- total
 
-	fmt.Print("go func in err 1111 ")
+// 	fmt.Print("go func in err 1111 ")
 
-	return nil
+// 	return nil
 
-}
+// }
 
 func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
 
@@ -495,7 +486,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		node.actios = make(map[string]DataActionST)
 
-		node_ukey := node.network + node.init_address + node.hash + node.owner
+		node_ukey := node.network + node.hash + node.owner + node.event_type
 
 		var action DataActionST
 
@@ -557,9 +548,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 		}
 
-		action_ukey := node.contract_address + action.token_id + action.event_type
-
-		action_ukey += fmt.Sprintf("%d", action.index)
+		action_ukey := strconv.FormatUint(uint64(action.index), 10)
 
 		if _, ok := data_nodes[node_ukey]; ok {
 
