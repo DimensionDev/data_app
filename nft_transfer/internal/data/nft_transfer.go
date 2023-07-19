@@ -157,6 +157,10 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 		node.Timestamp = nvalue.timestamp
 
 		node.Type = nvalue.event_type
+		if node.Type == "sale" {
+			node.Type = "trade"
+		}
+
 		if node.Network == "ethereum" || node.Network == "gnosis" {
 			if node.AddressTo == "0x22c1f6050e56d2876009903609a2cc3fef83b415" {
 				node.Type = "poap"
@@ -178,6 +182,10 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 				} else {
 					var cost pb.CostSt
 					cost.Symbol = sale_info.Payment_token.Symbol
+					// blur pool token translate to ETH for price searing in front-end
+					if sale_info.Payment_token.Payment_token_id == "ethereum.0x0000000000a39bb272e79075ade125fd351887ac" {
+						cost.Symbol = "ETH"
+					}
 					cost.Value = sale_info.Total_price.String()
 					cost.Decimals = sale_info.Payment_token.Decimals
 					action.Cost = &cost
