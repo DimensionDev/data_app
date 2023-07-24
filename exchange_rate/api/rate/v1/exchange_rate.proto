@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package rate.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "exchange_rate/api/rate/v1;v1";
+option java_multiple_files = true;
+option java_package = "dev.kratos.api.rate.v1";
+option java_outer_classname = "RateProtoV1";
+
+// The rate service definition.
+service Rate {
+  // get Supported Currencies
+  rpc SupportedCurrencies (rateRequest) returns (rateReply) {
+    option (google.api.http) = {
+      get: "/supported-currencies"
+    };
+  }
+}
+
+message rateRequest {
+  // string name = 1;
+}
+
+message rateReply {
+  repeated string currencies = 1;
+}

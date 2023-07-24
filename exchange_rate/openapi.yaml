@@ -1,0 +1,33 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: Rate API
+    description: The rate service definition.
+    version: 0.0.1
+paths:
+    /supported-currencies:
+        get:
+            tags:
+                - Rate
+            description: get Supported Currencies
+            operationId: Rate_SupportedCurrencies
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/rate.v1.RateReply'
+components:
+    schemas:
+        rate.v1.RateReply:
+            type: object
+            properties:
+                currencies:
+                    type: array
+                    items:
+                        type: string
+tags:
+    - name: Rate
