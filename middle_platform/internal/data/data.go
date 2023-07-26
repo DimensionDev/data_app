@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/bytehouse-cloud/driver-go/sdk"
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 	"time"
 
@@ -17,7 +17,7 @@ import (
 
 // ProviderSet is data providers.
 // var ProviderSet = wire.NewSet(NewData, NewGreeterRepo, NewNftTransferRepo)
-var ProviderSet = wire.NewSet(NewData, NewDataBase, NewGreeterRepo, NewNftTransferRepo)
+var ProviderSet = wire.NewSet(NewData, NewDataBase, NewRedis, NewGreeterRepo, NewNftTransferRepo, NewRateRepo)
 
 // Data .
 type Data struct {
@@ -142,7 +142,6 @@ func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
 }
 
 func NewRedis(c *conf.Data, logger log.Logger) (*redis.Client, func(), error) {
-	return nil, nil, nil
 
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
@@ -164,7 +163,7 @@ func NewRedis(c *conf.Data, logger log.Logger) (*redis.Client, func(), error) {
 	})
 
 	// Check the connection
-	err := client.Ping().Err()
+	err := client.Ping(client.Context()).Err()
 	if err != nil {
 		log.NewHelper(logger).Errorf("Failed to connect to Redis", err)
 		return nil, nil, err

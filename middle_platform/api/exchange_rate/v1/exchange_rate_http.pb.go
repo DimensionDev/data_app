@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.6.3
 // - protoc             v4.23.3
-// source: api/exchange_rate/v1/exchange_rate.proto
+// source: exchange_rate/v1/exchange_rate.proto
 
 package v1
 
