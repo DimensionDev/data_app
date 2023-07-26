@@ -24,7 +24,12 @@ import (
 
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
-	gateway, err := data.NewDataBase(confData, logger)
+	/*dataData, cleanup, err := data.NewData(confData, logger)
+	if err != nil {
+		return nil, nil, err
+	}*/
+
+	db, err := data.NewDataBase(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -32,21 +37,23 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	dataData, cleanup2, err := data.NewData(confData, logger, gateway, client)
+	dataData, cleanup2, err := data.NewData(confData, logger, db, client)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
+
+
 	greeterRepo := data.NewGreeterRepo(dataData, logger)
 	greeterUsecase := biz.NewGreeterUsecase(greeterRepo, logger)
 	greeterService := service.NewGreeterService(greeterUsecase)
 	nftTransferRepo := data.NewNftTransferRepo(dataData, logger)
 	nftTransferUsecase := biz.NewNftTransferUsecase(nftTransferRepo, logger)
 	nftTransferService := service.NewNftTransferService(nftTransferUsecase, logger)
+	exchange_rate_repo := data.NewRateRepo(dataData, logger)
+	exchangeRateUsecase := biz.NewRateUsecase(exchange_rate_repo, logger)
+	exchangeRateService := service.NewExchangeRateService(exchangeRateUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, greeterService, nftTransferService, logger)
-	rateRepo := data.NewRateRepo(dataData, logger)
-	rateUsecase := biz.NewRateUsecase(rateRepo, logger)
-	exchangeRateService := service.NewExchangeRateService(rateUsecase, logger)
 	httpServer := server.NewHTTPServer(confServer, greeterService, nftTransferService, exchangeRateService, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {

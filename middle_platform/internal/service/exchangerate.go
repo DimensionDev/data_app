@@ -2,12 +2,10 @@ package service
 
 import (
 	"context"
-	"fmt"
-
-	pb "middle_platform/api/exchange_rate/v1"
-	biz "middle_platform/internal/biz"
 
 	"github.com/go-kratos/kratos/v2/log"
+	pb "middle_platform/api/exchange_rate/v1"
+	biz "middle_platform/internal/biz"
 )
 
 type ExchangeRateService struct {
@@ -16,12 +14,11 @@ type ExchangeRateService struct {
 }
 
 func NewExchangeRateService(rate_info *biz.RateUsecase, logger log.Logger) *ExchangeRateService {
-	return &ExchangeRateService{usecase: rate_info}
+	return &ExchangeRateService{}
 }
 
 func (s *ExchangeRateService) SupportedCurrencies(ctx context.Context, req *pb.RateRequest) (*pb.RateReply, error) {
-	fmt.Println("usecase ", s.usecase)
-	res, err := s.usecase.SupportedCurrencies(ctx, req)
+	res, err := s.usecase.ListAll(ctx, req)
 
 	return res, err
 }
