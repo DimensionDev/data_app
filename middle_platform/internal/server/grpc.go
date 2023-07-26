@@ -1,11 +1,11 @@
 package server
 
 import (
-	v1 "nft_transfer/api/helloworld/v1"
-	nv1 "nft_transfer/api/nft_transfer/v1"
+	v1 "middle_platform/api/helloworld/v1"
+	nv1 "middle_platform/api/nft_transfer/v1"
 
-	"nft_transfer/internal/conf"
-	"nft_transfer/internal/service"
+	"middle_platform/internal/conf"
+	"middle_platform/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"

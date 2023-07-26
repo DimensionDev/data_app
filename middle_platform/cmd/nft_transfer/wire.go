@@ -6,11 +6,11 @@
 package main
 
 import (
-	"nft_transfer/internal/biz"
-	"nft_transfer/internal/conf"
-	"nft_transfer/internal/data"
-	"nft_transfer/internal/server"
-	"nft_transfer/internal/service"
+	"middle_platform/internal/biz"
+	"middle_platform/internal/conf"
+	"middle_platform/internal/data"
+	"middle_platform/internal/server"
+	"middle_platform/internal/service"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"

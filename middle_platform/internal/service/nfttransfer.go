@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"nft_transfer/internal/biz"
+	"middle_platform/internal/biz"
 
 	"github.com/go-kratos/kratos/v2/log"
 
-	pb "nft_transfer/api/nft_transfer/v1"
+	pb "middle_platform/api/nft_transfer/v1"
 )
 
 type NftTransferService struct {

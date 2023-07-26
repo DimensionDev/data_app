@@ -2,7 +2,7 @@ package biz
 
 import (
 	"context"
-	pb "nft_transfer/api/nft_transfer/v1"
+	pb "middle_platform/api/nft_transfer/v1"
 
 	"github.com/go-kratos/kratos/v2/log"
 )

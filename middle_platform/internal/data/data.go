@@ -10,7 +10,7 @@ import (
 	"time"
 
 	//"gorm.io/gorm"
-	"nft_transfer/internal/conf"
+	"middle_platform/internal/conf"
 	"os"
 	"strconv"
 )

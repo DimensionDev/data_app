@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"nft_transfer/internal/conf"
+	"middle_platform/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"

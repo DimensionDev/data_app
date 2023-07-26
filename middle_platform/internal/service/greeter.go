@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	v1 "nft_transfer/api/helloworld/v1"
-	"nft_transfer/internal/biz"
+	v1 "middle_platform/api/helloworld/v1"
+	"middle_platform/internal/biz"
 )
 
 // GreeterService is a greeter service.

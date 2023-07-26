@@ -1,10 +1,11 @@
 package server
 
 import (
-	v1 "nft_transfer/api/helloworld/v1"
-	nv1 "nft_transfer/api/nft_transfer/v1"
-	"nft_transfer/internal/conf"
-	"nft_transfer/internal/service"
+	rate "middle_platform/api/exchange_rate/v1"
+	v1 "middle_platform/api/helloworld/v1"
+	nv1 "middle_platform/api/nft_transfer/v1"
+	"middle_platform/internal/conf"
+	"middle_platform/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -12,7 +13,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, nft *service.NftTransferService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, nft *service.NftTransferService, rater *service.ExchangeRateService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -30,5 +31,6 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, nft *service
 	srv := http.NewServer(opts...)
 	v1.RegisterGreeterHTTPServer(srv, greeter)
 	nv1.RegisterNftTransferHTTPServer(srv, nft)
+	rate.RegisterExchangeRateHTTPServer(srv, rater)
 	return srv
 }
