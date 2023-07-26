@@ -9,11 +9,11 @@ package main
 import (
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
-	"nft_transfer/internal/biz"
-	"nft_transfer/internal/conf"
-	"nft_transfer/internal/data"
-	"nft_transfer/internal/server"
-	"nft_transfer/internal/service"
+	"middle_platform/internal/biz"
+	"middle_platform/internal/conf"
+	"middle_platform/internal/data"
+	"middle_platform/internal/server"
+	"middle_platform/internal/service"
 )
 
 import (
@@ -50,8 +50,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	nftTransferRepo := data.NewNftTransferRepo(dataData, logger)
 	nftTransferUsecase := biz.NewNftTransferUsecase(nftTransferRepo, logger)
 	nftTransferService := service.NewNftTransferService(nftTransferUsecase, logger)
+	exchange_rate_repo := data.NewRateRepo(dataData, logger)
+	exchangeRateUsecase := biz.NewRateUsecase(exchange_rate_repo, logger)
+	exchangeRateService := service.NewExchangeRateService(exchangeRateUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, greeterService, nftTransferService, logger)
-	httpServer := server.NewHTTPServer(confServer, greeterService, nftTransferService, logger)
+	httpServer := server.NewHTTPServer(confServer, greeterService, nftTransferService, exchangeRateService, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup2()

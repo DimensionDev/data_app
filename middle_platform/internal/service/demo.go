@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	pb "nft_transfer/api/helloworld/v1"
+	pb "middle_platform/api/helloworld/v1"
 )
 
 type DemoService struct {

@@ -3,7 +3,7 @@ package data
 import (
 	"context"
 
-	"nft_transfer/internal/biz"
+	"middle_platform/internal/biz"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
