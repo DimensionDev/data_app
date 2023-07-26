@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package api.helloworld.v1;
+import "google/api/annotations.proto";
+
+option go_package = "nft_transfer/api/helloworld/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.helloworld.v1";
+option java_outer_classname = "HelloworldProtoV1";
+
+
+service Demo {
+
+	rpc GetDemo (GetDemoRequest) returns (GetDemoReply)
+	{
+		option (google.api.http) = {
+			get: "/demo"
+		};
+	};
+}
+
+message GetDemoRequest {}
+message GetDemoReply {}
+

@@ -3,40 +3,10 @@
 
 openapi: 3.0.3
 info:
-    title: ""
+    title: ExchangeRate API
+    description: The rate service definition.
     version: 0.0.1
 paths:
-    /demo:
-        get:
-            tags:
-                - Demo
-            operationId: Demo_GetDemo
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/api.helloworld.v1.GetDemoReply'
-    /helloworld/{name}:
-        get:
-            tags:
-                - Greeter
-            description: Sends a greeting
-            operationId: Greeter_SayHello
-            parameters:
-                - name: name
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/helloworld.v1.HelloReply'
     /supported-currencies:
         get:
             tags:
@@ -49,146 +19,45 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/exchange_rate.v1.RateReply'
-    /v1/nfttransfer/getnfttransfer:
-        get:
-            tags:
-                - NftTransfer
-            operationId: NftTransfer_GetNftTransfer
-            parameters:
-                - name: address
-                  in: query
-                  schema:
-                    type: string
-                - name: network
-                  in: query
-                  schema:
-                    type: string
-                - name: type
-                  in: query
-                  schema:
-                    type: string
-                - name: orderBy
-                  in: query
-                  schema:
-                    type: string
-                - name: orderDirection
-                  in: query
-                  schema:
-                    type: string
-                - name: limit
-                  in: query
-                  schema:
-                    type: integer
-                    format: uint64
-                - name: cursor
-                  in: query
-                  schema:
-                    type: integer
-                    format: uint64
-            responses:
-                "200":
-                    description: OK
+                                $ref: '#/components/schemas/RateReply'
+                default:
+                    description: Default error response
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/api.nft_transfer.v1.GetNftTransferReply'
+                                $ref: '#/components/schemas/Status'
 components:
     schemas:
-        api.helloworld.v1.GetDemoReply:
-            type: object
-            properties: {}
-        api.nft_transfer.v1.ActionStArr:
+        GoogleProtobufAny:
             type: object
             properties:
-                tag:
+                '@type':
                     type: string
-                type:
-                    type: string
-                index:
-                    type: integer
-                    format: uint32
-                address_from:
-                    type: string
-                address_to:
-                    type: string
-                cost:
-                    $ref: '#/components/schemas/api.nft_transfer.v1.CostSt'
-                contract_address:
-                    type: string
-                token_id:
-                    type: string
-        api.nft_transfer.v1.CostSt:
-            type: object
-            properties:
-                symbol:
-                    type: string
-                value:
-                    type: string
-                decimals:
-                    type: integer
-                    format: uint32
-        api.nft_transfer.v1.GetNftTransferReply:
-            type: object
-            properties:
-                code:
-                    type: integer
-                    format: int32
-                reason:
-                    type: string
-                message:
-                    type: string
-                data:
-                    $ref: '#/components/schemas/api.nft_transfer.v1.PnftTransferSt'
-        api.nft_transfer.v1.NodeStArr:
-            type: object
-            properties:
-                timestamp:
-                    type: string
-                hash:
-                    type: string
-                owner:
-                    type: string
-                address_from:
-                    type: string
-                address_to:
-                    type: string
-                network:
-                    type: string
-                tag:
-                    type: string
-                type:
-                    type: string
-                actions:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/api.nft_transfer.v1.ActionStArr'
-        api.nft_transfer.v1.PnftTransferSt:
-            type: object
-            properties:
-                cursor:
-                    type: string
-                result:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/api.nft_transfer.v1.NodeStArr'
-        exchange_rate.v1.RateReply:
+                    description: The type of the serialized message.
+            additionalProperties: true
+            description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
+        RateReply:
             type: object
             properties:
                 currencies:
                     type: array
                     items:
                         type: string
-        helloworld.v1.HelloReply:
+        Status:
             type: object
             properties:
+                code:
+                    type: integer
+                    description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+                    format: int32
                 message:
                     type: string
-            description: The response message containing the greetings
+                    description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+                details:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/GoogleProtobufAny'
+                    description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
+            description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
 tags:
-    - name: Demo
     - name: ExchangeRate
-      description: The rate service definition.
-    - name: Greeter
-      description: The greeting service definition.
-    - name: NftTransfer

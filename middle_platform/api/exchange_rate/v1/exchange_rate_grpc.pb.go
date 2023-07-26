@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v4.23.3
-// source: exchange_rate/v1/exchange_rate.proto
+// source: api/exchange_rate/v1/exchange_rate.proto
 
 package v1
 
@@ -107,5 +107,5 @@ var ExchangeRate_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "exchange_rate/v1/exchange_rate.proto",
+	Metadata: "api/exchange_rate/v1/exchange_rate.proto",
 }
