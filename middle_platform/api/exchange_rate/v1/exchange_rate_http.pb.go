@@ -19,9 +19,11 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationExchangeRateBaseCurrency = "/exchange_rate.v1.ExchangeRate/BaseCurrency"
 const OperationExchangeRateSupportedCurrencies = "/exchange_rate.v1.ExchangeRate/SupportedCurrencies"
 
 type ExchangeRateHTTPServer interface {
+	BaseCurrency(context.Context, *BaseCurrencyRequest) (*BaseCurrencyReply, error)
 	// SupportedCurrencies get Supported Currencies
 	SupportedCurrencies(context.Context, *RateRequest) (*RateReply, error)
 }
@@ -29,6 +31,7 @@ type ExchangeRateHTTPServer interface {
 func RegisterExchangeRateHTTPServer(s *http.Server, srv ExchangeRateHTTPServer) {
 	r := s.Route("/")
 	r.GET("/supported-currencies", _ExchangeRate_SupportedCurrencies0_HTTP_Handler(srv))
+	r.GET("/exchange-rates", _ExchangeRate_BaseCurrency0_HTTP_Handler(srv))
 }
 
 func _ExchangeRate_SupportedCurrencies0_HTTP_Handler(srv ExchangeRateHTTPServer) func(ctx http.Context) error {
@@ -50,7 +53,27 @@ func _ExchangeRate_SupportedCurrencies0_HTTP_Handler(srv ExchangeRateHTTPServer)
 	}
 }
 
+func _ExchangeRate_BaseCurrency0_HTTP_Handler(srv ExchangeRateHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in BaseCurrencyRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationExchangeRateBaseCurrency)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.BaseCurrency(ctx, req.(*BaseCurrencyRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*BaseCurrencyReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type ExchangeRateHTTPClient interface {
+	BaseCurrency(ctx context.Context, req *BaseCurrencyRequest, opts ...http.CallOption) (rsp *BaseCurrencyReply, err error)
 	SupportedCurrencies(ctx context.Context, req *RateRequest, opts ...http.CallOption) (rsp *RateReply, err error)
 }
 
@@ -60,6 +83,19 @@ type ExchangeRateHTTPClientImpl struct {
 
 func NewExchangeRateHTTPClient(client *http.Client) ExchangeRateHTTPClient {
 	return &ExchangeRateHTTPClientImpl{client}
+}
+
+func (c *ExchangeRateHTTPClientImpl) BaseCurrency(ctx context.Context, in *BaseCurrencyRequest, opts ...http.CallOption) (*BaseCurrencyReply, error) {
+	var out BaseCurrencyReply
+	pattern := "/exchange-rates"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationExchangeRateBaseCurrency))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
 }
 
 func (c *ExchangeRateHTTPClientImpl) SupportedCurrencies(ctx context.Context, in *RateRequest, opts ...http.CallOption) (*RateReply, error) {

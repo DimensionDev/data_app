@@ -1,0 +1,34 @@
+version: '3.1'
+services:
+  middle-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8008:8008"
+      - "9008:9008"
+    volumes:
+        - ./logs:/app/logs/
+    restart: always
+    # env_file:
+    #   - .env
+    environment:
+      - REDIS_ADDR=redis:6379
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+    depends_on:
+      - redis
+    # networks:
+    #   - my_network
+    # network_mode: host
+  
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    # networks:
+    #   - my_network
+    # network_mode: host
+  
+# networks:
+#   my_network:

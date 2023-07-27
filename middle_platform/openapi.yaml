@@ -18,6 +18,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.helloworld.v1.GetDemoReply'
+    /exchange-rates:
+        get:
+            tags:
+                - ExchangeRate
+            operationId: ExchangeRate_BaseCurrency
+            parameters:
+                - name: base
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/exchange_rate.v1.BaseCurrencyReply'
     /helloworld/{name}:
         get:
             tags:
@@ -172,6 +189,19 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.nft_transfer.v1.NodeStArr'
+        exchange_rate.v1.BaseCurrencyReply:
+            type: object
+            properties:
+                timestamp:
+                    type: integer
+                    format: int32
+                base:
+                    type: string
+                rates:
+                    type: object
+                    additionalProperties:
+                        type: number
+                        format: double
         exchange_rate.v1.RateReply:
             type: object
             properties:

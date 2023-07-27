@@ -17,6 +17,11 @@ service ExchangeRate {
       get: "/supported-currencies"
     };
   }
+  rpc BaseCurrency (BaseCurrencyRequest) returns (BaseCurrencyReply) {
+    option (google.api.http) = {
+      get: "/exchange-rates"
+    };
+  }
 }
 
 message rateRequest {
@@ -25,4 +30,14 @@ message rateRequest {
 
 message rateReply {
   repeated string currencies = 1;
+}
+
+message BaseCurrencyRequest {
+  string base = 1;
+}
+
+message BaseCurrencyReply {
+  int32 timestamp = 1;
+  string base = 2;
+  map<string, double> rates = 3;
 }

@@ -9,6 +9,7 @@ import (
 
 type RateRepo interface {
 	SupportedCurrencies(ctx context.Context, req *v1.RateRequest) (*v1.RateReply, error)
+	BaseCurrency(ctx context.Context, req *v1.BaseCurrencyRequest) (*v1.BaseCurrencyReply, error)
 }
 
 // RateUsecase is a Rate usecase.
@@ -23,5 +24,10 @@ func NewRateUsecase(repo RateRepo, logger log.Logger) *RateUsecase {
 
 func (uc *RateUsecase) SupportedCurrencies(ctx context.Context, req *v1.RateRequest) (*v1.RateReply, error) {
 	res, err := uc.repo.SupportedCurrencies(ctx, req)
+	return res, err
+}
+
+func (uc *RateUsecase) BaseCurrency(ctx context.Context, req *v1.BaseCurrencyRequest) (*v1.BaseCurrencyReply, error) {
+	res, err := uc.repo.BaseCurrency(ctx, req)
 	return res, err
 }
