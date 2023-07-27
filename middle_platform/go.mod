@@ -18,6 +18,7 @@ require (
 require (
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/bits-and-blooms/bitset v1.2.2 // indirect
+	github.com/bradfitz/slice v0.0.0-20180809154707-2b758aa73013 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/dennwc/varint v1.0.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
@@ -39,6 +40,7 @@ require (
 	github.com/valyala/fastjson v1.6.3 // indirect
 	go.opentelemetry.io/otel v1.7.0 // indirect
 	go.opentelemetry.io/otel/trace v1.7.0 // indirect
+	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
