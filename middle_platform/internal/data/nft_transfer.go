@@ -2,7 +2,6 @@ package data
 
 import (
 	"context"
-	"reflect"
 
 	"encoding/json"
 
@@ -171,12 +170,10 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 			var action pb.ActionStArr
 			var sale_info SaleInfo
-
-			if &nvalue.sale_details != nil {
+			if &nvalue.sale_details != nil && nvalue.sale_details != "" {
 				err := json.Unmarshal([]byte(nvalue.sale_details), &sale_info)
 
 				if err != nil {
-					fmt.Println("sale detail :", reflect.TypeOf(nvalue.sale_details))
 					fmt.Println("sale details parsing error:", err)
 
 				} else {
@@ -228,38 +225,6 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 	}, err
 
 }
-
-// func (r *NftTransferRepo) GetTotalFromDB(db *sdk.Gateway, total_sql string, ch *chan uint64) error {
-
-// 	res1, err1 := db.Query(total_sql)
-
-// 	var total uint64
-
-// 	total = 0
-
-// 	if err1 == nil {
-
-// 		row1, ok1 := res1.NextRow()
-
-// 		if ok1 {
-
-// 			//u_total, _ := strconv.ParseUint(row1[0].(string), 10, 64)
-
-// 			total = row1[0].(uint64)
-
-// 		}
-
-// 	}
-
-// 	fmt.Println("go func in err ", reflect.TypeOf(total))
-
-// 	*ch <- total
-
-// 	fmt.Print("go func in err 1111 ")
-
-// 	return nil
-
-// }
 
 func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
 
@@ -368,6 +333,51 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	str_limit += fmt.Sprintf(" limit %d,%d", req.Cursor, req.Limit)
 
+	group_by := ""
+	if req.OrderBy != "" {
+		group_by += " group by chain,transaction_hash,owner,event_type," + req.OrderBy
+	} else {
+		group_by += " group by chain,transaction_hash,owner,event_type,block_timestamp"
+	}
+	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_index " + str_where + group_by + str_order + str_limit
+	fmt.Println("first_q:", first_q)
+	first_res, err := r.data.data_query(first_q)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var chains []string
+	var hashs []string
+	var _owners []string
+	var event_types []string
+	var dup_keys map[string]bool
+	dup_keys = make(map[string]bool)
+	var action_num uint64 = 0
+
+	for {
+		row, ok := first_res.NextRow()
+		if !ok {
+			break
+		}
+		action_num += 1
+		chains = append(chains, row[0].(string))
+		hashs = append(hashs, row[1].(string))
+		_owners = append(_owners, row[2].(string))
+		event_types = append(event_types, row[3].(string))
+		dups := []string{row[0].(string), row[1].(string), row[2].(string), row[3].(string)}
+		dup_string := strings.Join(dups, "_")
+		dup_keys[dup_string] = true
+	}
+
+	chain_condition := combineAndRemoveDuplicates("chain", chains)
+	hash_condition := combineAndRemoveDuplicates("transaction_hash", hashs)
+	owner_condition := combineAndRemoveDuplicates("owner", _owners)
+	event_type_condition := combineAndRemoveDuplicates("event_type", event_types)
+
+	conditions := []string{chain_condition, hash_condition, owner_condition, event_type_condition}
+	combine_in_condition := strings.Join(conditions, " and ")
+	where_str := "where" + combine_in_condition
+
 	str_sql_p := "select " +
 		"chain, " +
 		"transaction_initiator," +
@@ -383,7 +393,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		"sale_details " +
 		"from transfer_nft_filter_index "
 
-	str_sql_p += str_where + str_order + str_limit
+	str_sql_p += where_str
 
 	fmt.Println("str_sql:", str_sql_p)
 
@@ -398,19 +408,21 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	data_nodes = make(map[string]NftTransfertmpSt)
 
-	var action_num uint64 = 0
-
 	for {
 
 		row, ok := res.NextRow()
-
 		if !ok {
-
 			break
-
 		}
 
-		action_num += 1
+		// 这里要去除查出来的多余的记录
+		dups := []string{row[0].(string), row[2].(string), row[10].(string), row[4].(string)}
+		dup_string := strings.Join(dups, "_")
+		_, ok = dup_keys[dup_string]
+		if !ok {
+			continue
+		}
+
 		var node NftTransfertmpSt
 
 		if row[0] != nil {
@@ -598,4 +610,22 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 
 	return data_nodes, action_num, nil
 
+}
+
+func combineAndRemoveDuplicates(field string, strArr []string) string {
+	elements := make(map[string]bool)
+	var result strings.Builder
+
+	for _, str := range strArr {
+		if !elements[str] {
+			elements[str] = true
+			if result.Len() > 0 {
+				result.WriteString(",")
+			}
+			result.WriteString("'" + str + "'")
+		}
+	}
+	left_str := " " + field + " in ("
+	combine_str := left_str + result.String() + ")"
+	return combine_str
 }
