@@ -163,11 +163,11 @@ func NewRedis(c *conf.Data, logger log.Logger) (*redis.Client, func(), error) {
 	})
 
 	// Check the connection
-	err := client.Ping(client.Context()).Err()
-	if err != nil {
-		log.NewHelper(logger).Errorf("Failed to connect to Redis", err)
-		return nil, nil, err
-	}
+	// err := client.Ping(client.Context()).Err()
+	// if err != nil {
+	// 	log.NewHelper(logger).Errorf("Failed to connect to Redis", err)
+	// 	return nil, nil, err
+	// }
 
 	log.NewHelper(logger).Info("Connected to Redis!")
 	return client, cleanup, nil

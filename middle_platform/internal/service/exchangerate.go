@@ -25,3 +25,9 @@ func (s *ExchangeRateService) SupportedCurrencies(ctx context.Context, req *pb.R
 
 	return res, err
 }
+
+func (s *ExchangeRateService) BaseCurrency(ctx context.Context, req *pb.BaseCurrencyRequest) (*pb.BaseCurrencyReply, error) {
+	fmt.Println("usecase ", s.usecase)
+	res, err := s.usecase.BaseCurrency(ctx, req)
+	return res, err
+}

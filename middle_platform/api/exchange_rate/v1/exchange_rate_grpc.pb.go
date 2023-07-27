@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	ExchangeRate_SupportedCurrencies_FullMethodName = "/exchange_rate.v1.ExchangeRate/SupportedCurrencies"
+	ExchangeRate_BaseCurrency_FullMethodName        = "/exchange_rate.v1.ExchangeRate/BaseCurrency"
 )
 
 // ExchangeRateClient is the client API for ExchangeRate service.
@@ -28,6 +29,7 @@ const (
 type ExchangeRateClient interface {
 	// get Supported Currencies
 	SupportedCurrencies(ctx context.Context, in *RateRequest, opts ...grpc.CallOption) (*RateReply, error)
+	BaseCurrency(ctx context.Context, in *BaseCurrencyRequest, opts ...grpc.CallOption) (*BaseCurrencyReply, error)
 }
 
 type exchangeRateClient struct {
@@ -47,12 +49,22 @@ func (c *exchangeRateClient) SupportedCurrencies(ctx context.Context, in *RateRe
 	return out, nil
 }
 
+func (c *exchangeRateClient) BaseCurrency(ctx context.Context, in *BaseCurrencyRequest, opts ...grpc.CallOption) (*BaseCurrencyReply, error) {
+	out := new(BaseCurrencyReply)
+	err := c.cc.Invoke(ctx, ExchangeRate_BaseCurrency_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ExchangeRateServer is the server API for ExchangeRate service.
 // All implementations must embed UnimplementedExchangeRateServer
 // for forward compatibility
 type ExchangeRateServer interface {
 	// get Supported Currencies
 	SupportedCurrencies(context.Context, *RateRequest) (*RateReply, error)
+	BaseCurrency(context.Context, *BaseCurrencyRequest) (*BaseCurrencyReply, error)
 	mustEmbedUnimplementedExchangeRateServer()
 }
 
@@ -62,6 +74,9 @@ type UnimplementedExchangeRateServer struct {
 
 func (UnimplementedExchangeRateServer) SupportedCurrencies(context.Context, *RateRequest) (*RateReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SupportedCurrencies not implemented")
+}
+func (UnimplementedExchangeRateServer) BaseCurrency(context.Context, *BaseCurrencyRequest) (*BaseCurrencyReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BaseCurrency not implemented")
 }
 func (UnimplementedExchangeRateServer) mustEmbedUnimplementedExchangeRateServer() {}
 
@@ -94,6 +109,24 @@ func _ExchangeRate_SupportedCurrencies_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ExchangeRate_BaseCurrency_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BaseCurrencyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExchangeRateServer).BaseCurrency(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ExchangeRate_BaseCurrency_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExchangeRateServer).BaseCurrency(ctx, req.(*BaseCurrencyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ExchangeRate_ServiceDesc is the grpc.ServiceDesc for ExchangeRate service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +137,10 @@ var ExchangeRate_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SupportedCurrencies",
 			Handler:    _ExchangeRate_SupportedCurrencies_Handler,
+		},
+		{
+			MethodName: "BaseCurrency",
+			Handler:    _ExchangeRate_BaseCurrency_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
