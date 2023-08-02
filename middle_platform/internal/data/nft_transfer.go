@@ -339,7 +339,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 	} else {
 		group_by += " group by chain,transaction_hash,owner,event_type,block_timestamp"
 	}
-	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_index " + str_where + group_by + str_order + str_limit
+
+	spam_filter_condition := "and contract_address not in (select contract from spam_contracts) "
+	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_index " + str_where + spam_filter_condition + group_by + str_order + str_limit
 	fmt.Println("first_q:", first_q)
 	first_res, err := r.data.data_query(first_q)
 	if err != nil {
