@@ -12,7 +12,11 @@ option java_package = "api.nft_transfer.v1";
 service NftTransfer {
 	rpc GetNftTransfer (GetNftTransferRequest) returns (GetNftTransferReply){
 		option (google.api.http) = {
-			get: "/v1/nfttransfer/getnfttransfer"
+			get: "/v1/nfttransfer/getnfttransfer",
+			additional_bindings {
+				post: "/v1/nfttransfer/getnfttransfer",
+				body: "*",
+			}
 		};
 	};
 }

@@ -27,10 +27,30 @@ type NftTransferHTTPServer interface {
 
 func RegisterNftTransferHTTPServer(s *http.Server, srv NftTransferHTTPServer) {
 	r := s.Route("/")
-	r.GET("/v1/nfttransfer/getnfttransfer", _NftTransfer_GetNftTransfer0_HTTP_Handler(srv))
+	r.POST("/v1/nfttransfer/getnfttransfer", _NftTransfer_GetNftTransfer0_HTTP_Handler(srv))
+	r.GET("/v1/nfttransfer/getnfttransfer", _NftTransfer_GetNftTransfer1_HTTP_Handler(srv))
 }
 
 func _NftTransfer_GetNftTransfer0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetNftTransferRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNftTransferGetNftTransfer)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetNftTransfer(ctx, req.(*GetNftTransferRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetNftTransferReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _NftTransfer_GetNftTransfer1_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetNftTransferRequest
 		if err := ctx.BindQuery(&in); err != nil {
