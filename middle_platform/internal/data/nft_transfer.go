@@ -340,7 +340,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNft
 		group_by += " group by chain,transaction_hash,owner,event_type,block_timestamp"
 	}
 
-	spam_filter_condition := "and contract_address not in (select contract from spam_contracts) and collection_id not in (select collection_id from collections where spam_score>=80 or name like '%.lens-Follower' ) "
+	re_filter_str := " match(name, '^(([1-9][0-9]{3}\\$)|(\\$[1-9][0-9]{3})) [a-zA-Z]+') "
+	collection_sub_query := " (select collection_id from collections where spam_score>=80 or name like '%.lens-Follower' or " + re_filter_str + ") "
+	spam_filter_condition := " and contract_address not in (select contract from spam_contracts) and collection_id not in  " + collection_sub_query
 	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_index " + str_where + spam_filter_condition + group_by + str_order + str_limit
 	fmt.Println("first_q:", first_q)
 	first_res, err := r.data.data_query(first_q)
