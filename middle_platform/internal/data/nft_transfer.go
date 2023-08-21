@@ -396,6 +396,8 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	var limit uint32
 	if req.Limit == uint32(0) {
 		limit = uint32(100)
+	} else {
+		limit = req.Limit
 	}
 	limit_str := strconv.FormatUint(uint64(limit), 10)
 	cursor_limit_str := "limit " + cursor_str + "," + limit_str
