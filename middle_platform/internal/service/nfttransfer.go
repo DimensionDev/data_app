@@ -33,3 +33,14 @@ func (s *NftTransferService) GetNftTransfer(ctx context.Context, req *pb.GetNftT
 	*/
 
 }
+
+func (s *NftTransferService) GetReportSpam(ctx context.Context, req *pb.GetReportSpamRequest) (*pb.GetReportSpamReply, error) {
+	res, err := s.uc.GetSpamReport(ctx, req)
+	return res, err
+}
+
+// PostSpamReport
+func (s *NftTransferService) PostReportSpam(ctx context.Context, req *pb.PostReportSpamRequest) (*pb.PostReportSpamReply, error) {
+	res, err := s.uc.PostSpamReport(ctx, req)
+	return res, err
+}

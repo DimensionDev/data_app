@@ -67,6 +67,54 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/exchange_rate.v1.RateReply'
+    /v1/nfts/report/spam:
+        get:
+            tags:
+                - NftTransfer
+            operationId: NftTransfer_GetReportSpam
+            parameters:
+                - name: collectionId
+                  in: query
+                  schema:
+                    type: string
+                - name: status
+                  in: query
+                  schema:
+                    type: string
+                - name: cursor
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.nft_transfer.v1.GetReportSpamReply'
+        post:
+            tags:
+                - NftTransfer
+            operationId: NftTransfer_PostReportSpam
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.nft_transfer.v1.PostReportSpamRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.nft_transfer.v1.PostReportSpamReply'
     /v1/nfttransfer/getnfttransfer:
         get:
             tags:
@@ -157,6 +205,22 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/api.nft_transfer.v1.PnftTransferSt'
+        api.nft_transfer.v1.GetReportSpamReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: uint32
+                cursor:
+                    type: integer
+                    format: uint32
+                limit:
+                    type: integer
+                    format: uint32
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.nft_transfer.v1.SpamReport'
         api.nft_transfer.v1.NodeStArr:
             type: object
             properties:
@@ -189,6 +253,38 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.nft_transfer.v1.NodeStArr'
+        api.nft_transfer.v1.PostReportSpamReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: uint32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/api.nft_transfer.v1.SpamReport'
+        api.nft_transfer.v1.PostReportSpamRequest:
+            type: object
+            properties:
+                collectionId:
+                    type: string
+                status:
+                    type: string
+                createAt:
+                    type: string
+                updateAt:
+                    type: string
+        api.nft_transfer.v1.SpamReport:
+            type: object
+            properties:
+                collection_id:
+                    type: string
+                status:
+                    type: string
+                create_at:
+                    type: string
+                update_at:
+                    type: string
         exchange_rate.v1.BaseCurrencyReply:
             type: object
             properties:

@@ -10,6 +10,8 @@ import (
 // NftTransferRepo is a NftTransfer repo.
 type NftTransferRepo interface {
 	GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error)
+	GetSpamReport(ctx context.Context, req *pb.GetReportSpamRequest) (*pb.GetReportSpamReply, error)
+	PostSpamReport(ctx context.Context, req *pb.PostReportSpamRequest) (*pb.PostReportSpamReply, error)
 }
 
 // NftTransferUsecase
@@ -30,5 +32,15 @@ func (uc *NftTransferUsecase) GetHandleNftinfo(ctx context.Context, req *pb.GetN
 		return nil, err
 	}*/
 	//fmt.Print("bizyyyyyyy:", res)
+	return res, err
+}
+
+func (uc *NftTransferUsecase) GetSpamReport(ctx context.Context, req *pb.GetReportSpamRequest) (*pb.GetReportSpamReply, error) {
+	res, err := uc.repo.GetSpamReport(ctx, req)
+	return res, err
+}
+
+func (uc *NftTransferUsecase) PostSpamReport(ctx context.Context, req *pb.PostReportSpamRequest) (*pb.PostReportSpamReply, error) {
+	res, err := uc.repo.PostSpamReport(ctx, req)
 	return res, err
 }

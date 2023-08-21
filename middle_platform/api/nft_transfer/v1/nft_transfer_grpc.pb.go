@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	NftTransfer_GetNftTransfer_FullMethodName = "/api.nft_transfer.v1.NftTransfer/GetNftTransfer"
+	NftTransfer_GetReportSpam_FullMethodName  = "/api.nft_transfer.v1.NftTransfer/GetReportSpam"
+	NftTransfer_PostReportSpam_FullMethodName = "/api.nft_transfer.v1.NftTransfer/PostReportSpam"
 )
 
 // NftTransferClient is the client API for NftTransfer service.
@@ -27,6 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NftTransferClient interface {
 	GetNftTransfer(ctx context.Context, in *GetNftTransferRequest, opts ...grpc.CallOption) (*GetNftTransferReply, error)
+	GetReportSpam(ctx context.Context, in *GetReportSpamRequest, opts ...grpc.CallOption) (*GetReportSpamReply, error)
+	PostReportSpam(ctx context.Context, in *PostReportSpamRequest, opts ...grpc.CallOption) (*PostReportSpamReply, error)
 }
 
 type nftTransferClient struct {
@@ -46,11 +50,31 @@ func (c *nftTransferClient) GetNftTransfer(ctx context.Context, in *GetNftTransf
 	return out, nil
 }
 
+func (c *nftTransferClient) GetReportSpam(ctx context.Context, in *GetReportSpamRequest, opts ...grpc.CallOption) (*GetReportSpamReply, error) {
+	out := new(GetReportSpamReply)
+	err := c.cc.Invoke(ctx, NftTransfer_GetReportSpam_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nftTransferClient) PostReportSpam(ctx context.Context, in *PostReportSpamRequest, opts ...grpc.CallOption) (*PostReportSpamReply, error) {
+	out := new(PostReportSpamReply)
+	err := c.cc.Invoke(ctx, NftTransfer_PostReportSpam_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NftTransferServer is the server API for NftTransfer service.
 // All implementations must embed UnimplementedNftTransferServer
 // for forward compatibility
 type NftTransferServer interface {
 	GetNftTransfer(context.Context, *GetNftTransferRequest) (*GetNftTransferReply, error)
+	GetReportSpam(context.Context, *GetReportSpamRequest) (*GetReportSpamReply, error)
+	PostReportSpam(context.Context, *PostReportSpamRequest) (*PostReportSpamReply, error)
 	mustEmbedUnimplementedNftTransferServer()
 }
 
@@ -60,6 +84,12 @@ type UnimplementedNftTransferServer struct {
 
 func (UnimplementedNftTransferServer) GetNftTransfer(context.Context, *GetNftTransferRequest) (*GetNftTransferReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNftTransfer not implemented")
+}
+func (UnimplementedNftTransferServer) GetReportSpam(context.Context, *GetReportSpamRequest) (*GetReportSpamReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReportSpam not implemented")
+}
+func (UnimplementedNftTransferServer) PostReportSpam(context.Context, *PostReportSpamRequest) (*PostReportSpamReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostReportSpam not implemented")
 }
 func (UnimplementedNftTransferServer) mustEmbedUnimplementedNftTransferServer() {}
 
@@ -92,6 +122,42 @@ func _NftTransfer_GetNftTransfer_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NftTransfer_GetReportSpam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReportSpamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).GetReportSpam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_GetReportSpam_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).GetReportSpam(ctx, req.(*GetReportSpamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NftTransfer_PostReportSpam_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostReportSpamRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).PostReportSpam(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_PostReportSpam_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).PostReportSpam(ctx, req.(*PostReportSpamRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NftTransfer_ServiceDesc is the grpc.ServiceDesc for NftTransfer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +168,14 @@ var NftTransfer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetNftTransfer",
 			Handler:    _NftTransfer_GetNftTransfer_Handler,
+		},
+		{
+			MethodName: "GetReportSpam",
+			Handler:    _NftTransfer_GetReportSpam_Handler,
+		},
+		{
+			MethodName: "PostReportSpam",
+			Handler:    _NftTransfer_PostReportSpam_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -20,15 +20,21 @@ var _ = binding.EncodeURL
 const _ = http.SupportPackageIsVersion1
 
 const OperationNftTransferGetNftTransfer = "/api.nft_transfer.v1.NftTransfer/GetNftTransfer"
+const OperationNftTransferGetReportSpam = "/api.nft_transfer.v1.NftTransfer/GetReportSpam"
+const OperationNftTransferPostReportSpam = "/api.nft_transfer.v1.NftTransfer/PostReportSpam"
 
 type NftTransferHTTPServer interface {
 	GetNftTransfer(context.Context, *GetNftTransferRequest) (*GetNftTransferReply, error)
+	GetReportSpam(context.Context, *GetReportSpamRequest) (*GetReportSpamReply, error)
+	PostReportSpam(context.Context, *PostReportSpamRequest) (*PostReportSpamReply, error)
 }
 
 func RegisterNftTransferHTTPServer(s *http.Server, srv NftTransferHTTPServer) {
 	r := s.Route("/")
 	r.POST("/v1/nfttransfer/getnfttransfer", _NftTransfer_GetNftTransfer0_HTTP_Handler(srv))
 	r.GET("/v1/nfttransfer/getnfttransfer", _NftTransfer_GetNftTransfer1_HTTP_Handler(srv))
+	r.GET("/v1/nfts/report/spam", _NftTransfer_GetReportSpam0_HTTP_Handler(srv))
+	r.POST("/v1/nfts/report/spam", _NftTransfer_PostReportSpam0_HTTP_Handler(srv))
 }
 
 func _NftTransfer_GetNftTransfer0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
@@ -69,8 +75,48 @@ func _NftTransfer_GetNftTransfer1_HTTP_Handler(srv NftTransferHTTPServer) func(c
 	}
 }
 
+func _NftTransfer_GetReportSpam0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetReportSpamRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNftTransferGetReportSpam)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetReportSpam(ctx, req.(*GetReportSpamRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetReportSpamReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _NftTransfer_PostReportSpam0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in PostReportSpamRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNftTransferPostReportSpam)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.PostReportSpam(ctx, req.(*PostReportSpamRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*PostReportSpamReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type NftTransferHTTPClient interface {
 	GetNftTransfer(ctx context.Context, req *GetNftTransferRequest, opts ...http.CallOption) (rsp *GetNftTransferReply, err error)
+	GetReportSpam(ctx context.Context, req *GetReportSpamRequest, opts ...http.CallOption) (rsp *GetReportSpamReply, err error)
+	PostReportSpam(ctx context.Context, req *PostReportSpamRequest, opts ...http.CallOption) (rsp *PostReportSpamReply, err error)
 }
 
 type NftTransferHTTPClientImpl struct {
@@ -88,6 +134,32 @@ func (c *NftTransferHTTPClientImpl) GetNftTransfer(ctx context.Context, in *GetN
 	opts = append(opts, http.Operation(OperationNftTransferGetNftTransfer))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *NftTransferHTTPClientImpl) GetReportSpam(ctx context.Context, in *GetReportSpamRequest, opts ...http.CallOption) (*GetReportSpamReply, error) {
+	var out GetReportSpamReply
+	pattern := "/v1/nfts/report/spam"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationNftTransferGetReportSpam))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *NftTransferHTTPClientImpl) PostReportSpam(ctx context.Context, in *PostReportSpamRequest, opts ...http.CallOption) (*PostReportSpamReply, error) {
+	var out PostReportSpamReply
+	pattern := "/v1/nfts/report/spam"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationNftTransferPostReportSpam))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

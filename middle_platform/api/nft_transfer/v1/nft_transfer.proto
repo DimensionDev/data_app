@@ -19,6 +19,53 @@ service NftTransfer {
 			}
 		};
 	};
+
+	rpc GetReportSpam (GetReportSpamRequest) returns (GetReportSpamReply){
+		option (google.api.http) = {
+			get: "/v1/nfts/report/spam"
+		};
+	};
+
+	rpc PostReportSpam (PostReportSpamRequest) returns (PostReportSpamReply){
+		option (google.api.http) = {
+			post: "/v1/nfts/report/spam",
+			body: "*"
+		};
+	};
+}
+
+message PostReportSpamRequest {
+	string collection_id = 1;
+	string status = 2;
+	optional string create_at = 3;
+	optional string update_at = 4;
+}
+
+message PostReportSpamReply {
+	uint32 code = 1;
+	string message = 2;
+	SpamReport data = 3;
+}
+
+message SpamReport {
+	string collection_id = 1[json_name = "collection_id"];
+	string status = 2;
+	optional string create_at = 3[json_name = "create_at"];
+	optional string update_at = 4[json_name = "update_at"];
+}
+
+message GetReportSpamRequest {
+	string collection_id = 1;
+	string status = 2;
+	uint32 cursor = 3;
+	uint32 limit = 4;
+}
+
+message GetReportSpamReply {
+	uint32 code = 1;
+	optional uint32 cursor = 2;
+	uint32 limit = 3;
+	repeated SpamReport data = 4;
 }
 
 
