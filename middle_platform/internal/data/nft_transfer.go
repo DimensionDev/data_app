@@ -2,8 +2,6 @@ package data
 
 import (
 	"context"
-	"reflect"
-
 	"encoding/json"
 
 	"errors"
@@ -17,6 +15,8 @@ import (
 	pb "middle_platform/api/nft_transfer/v1"
 
 	"middle_platform/internal/biz"
+
+	resty "github.com/go-resty/resty/v2"
 
 	"strings"
 
@@ -312,6 +312,14 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 							Data:    nil,
 						}, nil
 					}
+					report_err := reportSpamToSimpleHash(collection_id)
+					if report_err != nil {
+						return &pb.PostReportSpamReply{
+							Code:    500,
+							Message: report_err.Error(),
+							Data:    nil,
+						}, nil
+					}
 				}
 				// 返回数据
 				data := pb.SpamReport{
@@ -361,11 +369,30 @@ func InsertIntoSpamReportTable(r *NftTransferRepo, insert_str string) error {
 }
 
 func UpdataCollectionSpamScore(r *NftTransferRepo, collection_id string) error {
-	update_str := fmt.Sprintf("update collections set spam_score=100 where collection_id='%s'", collection_id)
+	// update_str := fmt.Sprintf("update collections set spam_score=100 where collection_id='%s'", collection_id)
+	update_str := fmt.Sprintf("insert into collections (collection_id,spam_score) values ('%s', 100)", collection_id)
+	fmt.Println("update_str:", update_str)
 	_, err := r.data.data_query(update_str)
 	if err != nil {
 		return fmt.Errorf("writing data into bytehouse error:%s", err)
 	}
+	return nil
+}
+
+func reportSpamToSimpleHash(collection_id string) error {
+	// curl --location 'https://api.simplehash.com/api/v0/nfts/report/spam' \ --header 'X-API-KEY: mask_sk_Wv1uXGWUVWHx7LAPOvKWHmSot0' \ --header 'accept: application/json' \ --header 'content-type: application/json' \ --data '{ "collection_id":"bf60f01b784a501dded3dd73f5347832", "event_type":"mark_as_spam" }'
+	http_client := resty.New()
+	resp, err := http_client.R().
+		SetHeader("X-API-KEY", "mask_sk_Wv1uXGWUVWHx7LAPOvKWHmSot0").
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Accept", "application/json").
+		SetBody(`{"collection_id": "0a48938d63c46934df08fa139bd58e0b", "event_type":"mark_as_spam"}`).
+		Post("https://api.simplehash.com/api/v0/nfts/report/spam")
+	if err != nil {
+		fmt.Println("report to simplehash error:", err)
+		return fmt.Errorf("the collection of %s report to simplehash fail", collection_id)
+	}
+	fmt.Println("report resp:", resp)
 	return nil
 }
 
@@ -457,7 +484,6 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
 
 	//nftlist := make([]*pb.PnftTransferSt, 5, 5)
-	fmt.Println("song:", reflect.TypeOf(req))
 	if req.Address == "" {
 
 		return nil, 0, errors.New("input address is empty")
