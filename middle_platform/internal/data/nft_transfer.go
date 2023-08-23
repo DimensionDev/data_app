@@ -416,17 +416,23 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		condition_str = where_str + collection_id_str + status_str
 	}
 
-	// cursor_str := "0"
-	// if req.Cursor != nil {
-	// 	cursor_str = strconv.Itoa(req.Cursor)
-	// }
-	cursor_str := strconv.FormatUint(uint64(req.Cursor), 10)
+	var page uint32
+	if req.Page == 0 {
+		page = uint32(1)
+	} else {
+		page = req.Page
+	}
+
+	// cursor_str := strconv.FormatUint(uint64(req.Cursor), 10)
 	var limit uint32
 	if req.Limit == uint32(0) {
 		limit = uint32(100)
 	} else {
 		limit = req.Limit
 	}
+
+	cursor := (page - 1) * limit
+	cursor_str := strconv.FormatUint(uint64(cursor), 10)
 	limit_str := strconv.FormatUint(uint64(limit), 10)
 	cursor_limit_str := "limit " + cursor_str + "," + limit_str
 
@@ -434,13 +440,26 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	query_str := fmt.Sprintf(
 		"select collection_id,status,create_at,update_at from spam_report %s %s %s",
 		condition_str, order_str, cursor_limit_str)
+
+	total_query_str := fmt.Sprintf("select count(1) from spam_report %s ", condition_str)
+	fmt.Println("total_query_str:", total_query_str)
+	total_count, err := r.GetTotalNumberOfSpamReport(total_query_str)
+	if err != nil {
+		return &pb.GetReportSpamReply{
+			Code: 500,
+			Data: nil,
+		}, err
+	}
+	fmt.Println("total count:", total_count)
+	// current_page := cursor / limit + 1
+
 	fmt.Println("query str:", query_str)
 	res, err := r.data.data_query(query_str)
 
 	if err != nil {
 		fmt.Println("query from bytehouse:", query_str)
 		return &pb.GetReportSpamReply{
-			Code: 0,
+			Code: 500,
 			Data: nil,
 		}, err
 	}
@@ -470,16 +489,33 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	result.Code = 200
 	result.Limit = limit
 	result.Data = report_list
+	result.Page = page
+	result.Total = total_count
 
-	var next_cursor uint32
-	if uint32(len(report_list)) == limit {
-		next_cursor = req.Cursor + limit
-		result.Cursor = &next_cursor
-	}
+	// var next_cursor uint32
+	// if uint32(len(report_list)) == limit {
+	// 	next_cursor = req.Cursor + limit
+	// 	result.Cursor = &next_cursor
+	// }
 
 	return &result, nil
 	// return &reportSpamReply, err
 	// return nil, nil
+}
+
+func (r *NftTransferRepo) GetTotalNumberOfSpamReport(query_str string) (uint64, error) {
+	res, err := r.data.data_query(query_str)
+	if err != nil {
+		fmt.Println("query total count for spam reports err:", err)
+		return uint64(0), err
+	}
+	row, ok := res.NextRow()
+	if !ok {
+		fmt.Println("query total count for spam reports err:", err)
+		return uint64(0), err
+	} else {
+		return row[0].(uint64), nil
+	}
 }
 
 func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {

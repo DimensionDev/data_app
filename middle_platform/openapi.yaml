@@ -81,12 +81,13 @@ paths:
                   in: query
                   schema:
                     type: string
-                - name: cursor
+                - name: page
                   in: query
+                  description: uint32 cursor = 3;
                   schema:
                     type: integer
                     format: uint32
-                - name: limit
+                - name: page_size
                   in: query
                   schema:
                     type: integer
@@ -211,12 +212,16 @@ components:
                 code:
                     type: integer
                     format: uint32
-                cursor:
+                page:
+                    type: integer
+                    description: optional uint32 cursor = 2;
+                    format: uint32
+                page_size:
                     type: integer
                     format: uint32
-                limit:
+                total:
                     type: integer
-                    format: uint32
+                    format: uint64
                 data:
                     type: array
                     items:

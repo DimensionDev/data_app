@@ -57,15 +57,18 @@ message SpamReport {
 message GetReportSpamRequest {
 	string collection_id = 1;
 	string status = 2;
-	uint32 cursor = 3;
-	uint32 limit = 4;
+	// uint32 cursor = 3;
+	uint32 page = 3;
+	uint32 limit = 4[json_name = "page_size"];
 }
 
 message GetReportSpamReply {
 	uint32 code = 1;
-	optional uint32 cursor = 2;
-	uint32 limit = 3;
-	repeated SpamReport data = 4;
+	// optional uint32 cursor = 2;
+	uint32 page = 2;
+	uint32 limit = 3[json_name = "page_size"];
+	uint64 total = 4;
+	repeated SpamReport data = 5;
 }
 
 
