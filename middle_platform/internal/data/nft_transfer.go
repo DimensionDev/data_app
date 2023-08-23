@@ -406,7 +406,7 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	}
 	status_str := ""
 	if req.Status != "" {
-		status_str = fmt.Sprintf(" status=%s", req.Status)
+		status_str = combineAndRemoveDuplicates("status", strings.Split(req.Status, ","))
 	}
 
 	condition_str := ""
