@@ -268,7 +268,11 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 					Data:    &data,
 				}, nil
 			} else {
-				return nil, fmt.Errorf("this report of %s is already %s", collection_id, row[0])
+				return &pb.PostReportSpamReply{
+					Code:    400,
+					Message: fmt.Sprintf("this report of %s is already %s", collection_id, row[0]),
+					Data:    nil,
+				}, nil
 			}
 		} else {
 			create_at := time.Now().Format(targetLayout)
