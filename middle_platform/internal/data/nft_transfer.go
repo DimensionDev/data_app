@@ -303,19 +303,19 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 
 				// 更新 collection 的 spam_score
 				if next_status == "approved" {
-					err := UpdataCollectionSpamScore(r, collection_id)
-					if err != nil {
-						return &pb.PostReportSpamReply{
-							Code:    500,
-							Message: err.Error(),
-							Data:    nil,
-						}, nil
-					}
 					report_err := reportSpamToSimpleHash(collection_id)
 					if report_err != nil {
 						return &pb.PostReportSpamReply{
 							Code:    500,
 							Message: report_err.Error(),
+							Data:    nil,
+						}, nil
+					}
+					err := UpdataCollectionSpamScore(r, collection_id)
+					if err != nil {
+						return &pb.PostReportSpamReply{
+							Code:    500,
+							Message: err.Error(),
 							Data:    nil,
 						}, nil
 					}
