@@ -249,8 +249,8 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 		// 检查 collection 是否已经被report
 		if row != nil {
 			if row[0] == next_status || row[0] == "rejected" {
-				create_at := time.Now().Format(targetLayout)
-				update_at := create_at
+				create_at := row[1].(time.Time).Format(targetLayout)
+				update_at := time.Now().UTC().Format(targetLayout)
 				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s')", collection_id, next_status, create_at, update_at)
 				insert_err := InsertIntoSpamReportTable(r, insert_str)
 				if insert_err != nil {
@@ -275,7 +275,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 				}, nil
 			}
 		} else {
-			create_at := time.Now().Format(targetLayout)
+			create_at := time.Now().UTC().Format(targetLayout)
 			update_at := create_at
 			insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s')", collection_id, next_status, create_at, update_at)
 			insert_err := InsertIntoSpamReportTable(r, insert_str)
@@ -298,7 +298,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 		if row != nil {
 			fmt.Println(row)
 			if row[0] == "reporting" {
-				update_at := time.Now().Format(targetLayout)
+				update_at := time.Now().UTC().Format(targetLayout)
 				create_at := row[1].(time.Time).Format(targetLayout)
 
 				// 更新 collection 的 spam_score
