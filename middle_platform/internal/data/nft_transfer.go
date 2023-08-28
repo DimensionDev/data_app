@@ -391,11 +391,12 @@ func UpdataCollectionSpamScore(r *NftTransferRepo, collection_id string) error {
 func reportSpamToSimpleHash(collection_id string) error {
 	// curl --location 'https://api.simplehash.com/api/v0/nfts/report/spam' \ --header 'X-API-KEY: mask_sk_Wv1uXGWUVWHx7LAPOvKWHmSot0' \ --header 'accept: application/json' \ --header 'content-type: application/json' \ --data '{ "collection_id":"bf60f01b784a501dded3dd73f5347832", "event_type":"mark_as_spam" }'
 	http_client := resty.New()
+
 	resp, err := http_client.R().
 		SetHeader("X-API-KEY", "mask_sk_Wv1uXGWUVWHx7LAPOvKWHmSot0").
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Accept", "application/json").
-		SetBody(`{"collection_id": "0a48938d63c46934df08fa139bd58e0b", "event_type":"mark_as_spam"}`).
+		SetBody(`{"collection_id": "` + collection_id + `", "event_type":"mark_as_spam"}`).
 		Post("https://api.simplehash.com/api/v0/nfts/report/spam")
 	if err != nil {
 		fmt.Println("report to simplehash error:", err)
