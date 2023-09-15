@@ -8,7 +8,7 @@ import (
 
 	"fmt"
 
-	"github.com/bytehouse-cloud/driver-go/sdk"
+	// "github.com/bytehouse-cloud/driver-go/sdk"
 
 	"github.com/go-kratos/kratos/v2/log"
 
@@ -108,7 +108,8 @@ func NewNftTransferRepo(data *Data, logger log.Logger) biz.NftTransferRepo {
 
 func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error) {
 
-	handles, action_num, err := r.GetHandleNftinfoFromDB(r.data.DataBaseCli, req)
+	handle_start_time := time.Now().UnixMilli()
+	handles, action_num, err := r.GetHandleNftinfoFromDB(req)
 	if err != nil {
 		return &pb.GetNftTransferReply{
 
@@ -214,6 +215,8 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 	}
 
+	handle_end_time := time.Now().UnixMilli()
+	fmt.Println("handle time:", handle_end_time-handle_start_time)
 	return &pb.GetNftTransferReply{
 
 		Code: 200,
@@ -528,7 +531,7 @@ func (r *NftTransferRepo) GetTotalNumberOfSpamReport(query_str string) (uint64, 
 	}
 }
 
-func (r *NftTransferRepo) GetHandleNftinfoFromDB(db *sdk.Gateway, req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
+func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
 
 	//nftlist := make([]*pb.PnftTransferSt, 5, 5)
 	if req.Address == "" {
