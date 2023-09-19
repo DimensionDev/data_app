@@ -963,10 +963,10 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 		limit = req.Limit
 	}
 	query := fmt.Sprintf(
-		"select * from transfer_nft_filter_index %s order by create_time desc limit %d,%d",
+		"select * from transfer_nft %s order by create_time desc limit %d,%d",
 		whereCondition, (page-1)*limit, limit)
 	fmt.Println("query:", query)
-	totalQuery := fmt.Sprintf("select count(1) from transfer_nft_filter_index %s", whereCondition)
+	totalQuery := fmt.Sprintf("select count(1) from transfer_nft %s", whereCondition)
 	fmt.Println("totalQuery:", totalQuery)
 	totalCount, err := r.GetTotalNumberOfSpamReport(totalQuery)
 	if err != nil {
@@ -990,15 +990,33 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 			break
 		}
 		var transferNft pb.TransferNft
-		transferNft.NftId = row[0].(string)
-		transferNft.Chain = row[1].(string)
-		transferNft.ContractAddress = row[2].(string)
-		transferNft.TokenId = row[3].(string)
-		transferNft.CollectionId = row[4].(string)
-		transferNft.EventType = row[5].(string)
-		transferNft.AddressFrom = row[6].(string)
-		transferNft.AddressTo = row[7].(string)
-		transferNft.Owner = row[17].(string)
+		if row[0] != nil {
+			transferNft.NftId = row[0].(string)
+		}
+		if row[1] != nil {
+			transferNft.Chain = row[1].(string)
+		}
+		if row[2] != nil {
+			transferNft.ContractAddress = row[2].(string)
+		}
+		if row[3] != nil {
+			transferNft.TokenId = row[3].(string)
+		}
+		if row[4] != nil {
+			transferNft.CollectionId = row[4].(string)
+		}
+		if row[5] != nil {
+			transferNft.EventType = row[5].(string)
+		}
+		if row[6] != nil {
+			transferNft.AddressFrom = row[6].(string)
+		}
+		if row[7] != nil {
+			transferNft.AddressTo = row[7].(string)
+		}
+		if row[8] != nil {
+			transferNft.Owner = row[8].(string)
+		}
 		transferNftList = append(transferNftList, &transferNft)
 	}
 
