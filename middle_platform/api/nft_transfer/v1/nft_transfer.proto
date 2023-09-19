@@ -63,6 +63,7 @@ message TransferNft {
 	string address_from = 7;
 	string address_to = 8;
 	string owner = 9;
+	string block_timestamp = 10;
 }
 message PostReportSpamRequest {
 	string collection_id = 1;

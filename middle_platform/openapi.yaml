@@ -361,6 +361,8 @@ components:
                     type: string
                 owner:
                     type: string
+                blockTimestamp:
+                    type: string
         exchange_rate.v1.BaseCurrencyReply:
             type: object
             properties:

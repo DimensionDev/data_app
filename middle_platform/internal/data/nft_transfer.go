@@ -1014,8 +1014,12 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 		if row[7] != nil {
 			transferNft.AddressTo = row[7].(string)
 		}
-		if row[8] != nil {
-			transferNft.Owner = row[8].(string)
+		if row[9] != nil {
+			blockTime := row[9].(time.Time)
+			transferNft.BlockTimestamp = blockTime.Format("2006-01-02T15:04:05Z")
+		}
+		if row[17] != nil {
+			transferNft.Owner = row[17].(string)
 		}
 		transferNftList = append(transferNftList, &transferNft)
 	}
