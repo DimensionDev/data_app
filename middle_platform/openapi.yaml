@@ -116,6 +116,37 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.nft_transfer.v1.PostReportSpamReply'
+    /v1/nfts/transfer:
+        get:
+            tags:
+                - NftTransfer
+            operationId: NftTransfer_GetTransferNft
+            parameters:
+                - name: contractAddress
+                  in: query
+                  schema:
+                    type: string
+                - name: eventType
+                  in: query
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: page_size
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.nft_transfer.v1.GetTransferNftReply'
     /v1/nfttransfer/getnfttransfer:
         get:
             tags:
@@ -226,6 +257,25 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.nft_transfer.v1.SpamReport'
+        api.nft_transfer.v1.GetTransferNftReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: uint32
+                page:
+                    type: integer
+                    format: uint32
+                page_size:
+                    type: integer
+                    format: uint32
+                total:
+                    type: integer
+                    format: uint64
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.nft_transfer.v1.TransferNft'
         api.nft_transfer.v1.NodeStArr:
             type: object
             properties:
@@ -289,6 +339,27 @@ components:
                 create_at:
                     type: string
                 update_at:
+                    type: string
+        api.nft_transfer.v1.TransferNft:
+            type: object
+            properties:
+                contractAddress:
+                    type: string
+                nftId:
+                    type: string
+                chain:
+                    type: string
+                tokenId:
+                    type: string
+                collectionId:
+                    type: string
+                eventType:
+                    type: string
+                addressFrom:
+                    type: string
+                addressTo:
+                    type: string
+                owner:
                     type: string
         exchange_rate.v1.BaseCurrencyReply:
             type: object

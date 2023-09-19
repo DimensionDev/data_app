@@ -11,6 +11,7 @@ import (
 type NftTransferRepo interface {
 	GetHandleNftinfo(ctx context.Context, req *pb.GetNftTransferRequest) (*pb.GetNftTransferReply, error)
 	GetSpamReport(ctx context.Context, req *pb.GetReportSpamRequest) (*pb.GetReportSpamReply, error)
+	GetTransferNft(ctx context.Context, req *pb.GetTransferNftRequest) (*pb.GetTransferNftReply, error)
 	PostSpamReport(ctx context.Context, req *pb.PostReportSpamRequest) (*pb.PostReportSpamReply, error)
 }
 
@@ -42,5 +43,9 @@ func (uc *NftTransferUsecase) GetSpamReport(ctx context.Context, req *pb.GetRepo
 
 func (uc *NftTransferUsecase) PostSpamReport(ctx context.Context, req *pb.PostReportSpamRequest) (*pb.PostReportSpamReply, error) {
 	res, err := uc.repo.PostSpamReport(ctx, req)
+	return res, err
+}
+func (uc *NftTransferUsecase) GetTransferNft(ctx context.Context, req *pb.GetTransferNftRequest) (*pb.GetTransferNftReply, error) {
+	res, err := uc.repo.GetTransferNft(ctx, req)
 	return res, err
 }

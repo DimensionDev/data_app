@@ -7,8 +7,8 @@ server:
     timeout: 1s
 data:
   database:
-    # host: gateway.aws-us-east-1.bytehouse.cloud:19000
-    host: vpce.aws-us-east-1.bytehouse.cloud:19000
+    #host: gateway.aws-us-east-1.bytehouse.cloud:19000
+    host: .cloud:19000
     region: US-EAST-1
     account: AWS6R1TJ
     user: jewen.han

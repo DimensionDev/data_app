@@ -937,3 +937,77 @@ func combineAndRemoveDuplicates(field string, strArr []string) string {
 	combine_str := left_str + result.String() + ")"
 	return combine_str
 }
+func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransferNftRequest) (*pb.GetTransferNftReply, error) {
+	whereCondition := "where "
+	if req.ContractAddress != "" {
+		whereCondition = whereCondition + "`contract_address`='" + req.ContractAddress + "'"
+	}
+	eventTypeCondition := ""
+	if req.EventType != "" {
+		eventTypeCondition = combineAndRemoveDuplicates("`event_type`", strings.Split(req.EventType, ","))
+		if eventTypeCondition != "" {
+			whereCondition = whereCondition + " and " + eventTypeCondition
+		}
+	}
+
+	var page uint32
+	if req.Page <= 0 {
+		page = uint32(1)
+	} else {
+		page = req.Page
+	}
+	var limit uint32
+	if req.Limit == uint32(0) {
+		limit = uint32(100)
+	} else {
+		limit = req.Limit
+	}
+	query := fmt.Sprintf(
+		"select * from transfer_nft_filter_index %s order by create_time desc limit %d,%d",
+		whereCondition, (page-1)*limit, limit)
+	fmt.Println("query:", query)
+	totalQuery := fmt.Sprintf("select count(1) from transfer_nft_filter_index %s", whereCondition)
+	fmt.Println("totalQuery:", totalQuery)
+	totalCount, err := r.GetTotalNumberOfSpamReport(totalQuery)
+	if err != nil {
+		return &pb.GetTransferNftReply{
+			Code: 500,
+			Data: nil,
+		}, err
+	}
+	res, err := r.data.data_query(query)
+	if err != nil {
+		return &pb.GetTransferNftReply{
+			Code: 500,
+			Data: nil,
+		}, err
+	}
+
+	var transferNftList []*pb.TransferNft
+	for {
+		row, ok := res.NextRow()
+		if !ok {
+			break
+		}
+		var transferNft pb.TransferNft
+		transferNft.NftId = row[0].(string)
+		transferNft.Chain = row[1].(string)
+		transferNft.ContractAddress = row[2].(string)
+		transferNft.TokenId = row[3].(string)
+		transferNft.CollectionId = row[4].(string)
+		transferNft.EventType = row[5].(string)
+		transferNft.AddressFrom = row[6].(string)
+		transferNft.AddressTo = row[7].(string)
+		transferNft.Owner = row[17].(string)
+		transferNftList = append(transferNftList, &transferNft)
+	}
+
+	var result pb.GetTransferNftReply
+	result.Code = 200
+	result.Limit = limit
+	result.Data = transferNftList
+	result.Page = page
+	result.Total = totalCount
+
+	return &result, nil
+}
