@@ -524,8 +524,8 @@ func (r *NftTransferRepo) GetTotalNumberOfSpamReport(query_str string) (uint64, 
 	}
 	row, ok := res.NextRow()
 	if !ok {
-		fmt.Println("query total count for spam reports err:", err)
-		return uint64(0), err
+		fmt.Println("query fail from bytehouse")
+		return uint64(0), errors.New("query fail from bytehouse")
 	} else {
 		return row[0].(uint64), nil
 	}
