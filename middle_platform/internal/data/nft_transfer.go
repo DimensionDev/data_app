@@ -938,9 +938,9 @@ func combineAndRemoveDuplicates(field string, strArr []string) string {
 	return combine_str
 }
 func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransferNftRequest) (*pb.GetTransferNftReply, error) {
-	whereCondition := "where "
+	whereCondition := "where `block_timestamp` >='2023-07-31 00:00:00' "
 	if req.ContractAddress != "" {
-		whereCondition = whereCondition + "`contract_address`='" + req.ContractAddress + "'"
+		whereCondition = whereCondition + "and `contract_address`='" + req.ContractAddress + "'"
 	}
 	eventTypeCondition := ""
 	if req.EventType != "" {
