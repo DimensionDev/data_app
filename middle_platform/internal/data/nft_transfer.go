@@ -949,6 +949,13 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 			whereCondition = whereCondition + " and " + eventTypeCondition
 		}
 	}
+	ownerCondition := ""
+	if req.Owners != "" {
+		ownerCondition = combineAndRemoveDuplicates("`owner`", strings.Split(req.Owners, ","))
+		if ownerCondition != "" {
+			whereCondition = whereCondition + " and " + ownerCondition
+		}
+	}
 
 	var page uint32
 	if req.Page <= 0 {

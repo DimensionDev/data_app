@@ -42,8 +42,9 @@ service NftTransfer {
 message GetTransferNftRequest {
 	string contract_address = 1;
 	string event_type = 2;
-	uint32 page = 3;
-	uint32 limit = 4[json_name = "page_size"];
+	string owners = 3;
+	uint32 page = 4;
+	uint32 limit = 5[json_name = "page_size"];
 }
 
 message GetTransferNftReply {

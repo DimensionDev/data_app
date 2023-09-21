@@ -130,6 +130,10 @@ paths:
                   in: query
                   schema:
                     type: string
+                - name: owners
+                  in: query
+                  schema:
+                    type: string
                 - name: page
                   in: query
                   schema:
