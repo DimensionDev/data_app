@@ -8,6 +8,9 @@ package v1
 
 import (
 	context "context"
+	"fmt"
+	// "net/http"
+
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
 )
@@ -89,6 +92,7 @@ func _NftTransfer_GetReportSpam0_HTTP_Handler(srv NftTransferHTTPServer) func(ct
 			return srv.GetReportSpam(ctx, req.(*GetReportSpamRequest))
 		})
 		out, err := h(ctx, &in)
+		fmt.Println("remote addr:",ctx.Request().RemoteAddr)
 		if err != nil {
 			return err
 		}
