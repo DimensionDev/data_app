@@ -12,7 +12,7 @@ data:
     region: US-EAST-1
     account: AWS6R1TJ
     user: jewen.han
-    password: Hwj521138=
+    password: cEDUDAUaRMA7LaDwPNKF
     dbname: data_warehouse
   redis:
     addr: 127.0.0.1:6379
