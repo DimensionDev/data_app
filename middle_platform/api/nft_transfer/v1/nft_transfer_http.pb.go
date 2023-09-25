@@ -57,6 +57,7 @@ func _NftTransfer_GetNftTransfer0_HTTP_Handler(srv NftTransferHTTPServer) func(c
 		if err != nil {
 			return err
 		}
+		fmt.Println("get nft transfer header:", ctx.Header())
 		reply := out.(*GetNftTransferReply)
 		return ctx.Result(200, reply)
 	}
