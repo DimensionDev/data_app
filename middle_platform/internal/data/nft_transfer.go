@@ -478,7 +478,7 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 
 	order_str := "order by update_at desc"
 	query_str := fmt.Sprintf(
-		"select collection_id,status,create_at,update_at from spam_report %s %s %s",
+		"select collection_id,status,create_at,update_at,source from spam_report %s %s %s",
 		condition_str, order_str, cursor_limit_str)
 
 	total_query_str := fmt.Sprintf("select count(1) from spam_report %s ", condition_str)
@@ -522,6 +522,8 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		spam_report.CreateAt = &create_at
 		update_at = row[3].(time.Time).Format(targetLayout)
 		spam_report.UpdateAt = &update_at
+		reply_source := row[4].(string)
+		spam_report.Source = &reply_source
 		report_list = append(report_list, &spam_report)
 	}
 	// reportSpamReply.Data = report_list
