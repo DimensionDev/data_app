@@ -1,23 +1,29 @@
 package server
 
 import (
-	rate "middle_platform/api/exchange_rate/v1"
+	exchange_rate "middle_platform/api/exchange_rate/v1"
 	v1 "middle_platform/api/helloworld/v1"
 	nv1 "middle_platform/api/nft_transfer/v1"
 	"middle_platform/internal/conf"
 	"middle_platform/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/middleware/ratelimit"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/gorilla/handlers"
 )
+
+// Create a rate with the given limit (number of requests) for the given
+// period (a time.Duration of your choice).
 
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, nft *service.NftTransferService, rater *service.ExchangeRateService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
+			custom_ratelimiter,
+			ratelimit.Server(),
 		),
 	}
 	if c.Http.Network != "" {
@@ -38,6 +44,6 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, nft *service
 	srv := http.NewServer(opts...)
 	v1.RegisterGreeterHTTPServer(srv, greeter)
 	nv1.RegisterNftTransferHTTPServer(srv, nft)
-	rate.RegisterExchangeRateHTTPServer(srv, rater)
+	exchange_rate.RegisterExchangeRateHTTPServer(srv, rater)
 	return srv
 }

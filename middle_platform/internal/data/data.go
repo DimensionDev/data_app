@@ -72,7 +72,7 @@ func NewDataBase(c *conf.Data, logger log.Logger) (string, error) {
 	//dsn := fmt.Sprintf("tcp://%s?region=%s&account=%s&user=%s&password=%s&secure=true&database=%s", host, region, account, user, password, dbname)
 	dsn := fmt.Sprintf("tcp://%s?account=%s&user=%s&password=%s&secure=true&database=%s", host, account, user, password, dbname)
 
-	fmt.Println("dsn: ", dsn)
+	// fmt.Println("dsn: ", dsn)
 	return dsn, nil
 }
 
