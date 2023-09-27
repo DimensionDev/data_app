@@ -438,6 +438,7 @@ func reportSpamToSimpleHash(collection_id string) error {
 
 func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSpamRequest) (*pb.GetReportSpamReply, error) {
 	where_str := "where "
+	condition_str := ""
 
 	collection_id_str := ""
 	if req.CollectionId != "" {
@@ -449,11 +450,21 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		status_str = combineAndRemoveDuplicates("status", strings.Split(req.Status, ","))
 	}
 
-	condition_str := ""
+	source_str := ""
+	if req.Source != "" {
+		source_str = combineAndRemoveDuplicates("source", strings.Split(req.Source, ","))
+	}
+
 	if collection_id_str != "" && status_str != "" {
 		condition_str = where_str + collection_id_str + " and " + status_str
 	} else if collection_id_str != "" || status_str != "" {
 		condition_str = where_str + collection_id_str + status_str
+	}
+
+	if condition_str != "" && source_str != "" {
+		condition_str = condition_str + " and " + source_str
+	} else if condition_str == "" && source_str != "" {
+		condition_str = where_str + source_str
 	}
 
 	var page uint32

@@ -92,6 +92,10 @@ paths:
                   schema:
                     type: integer
                     format: uint32
+                - name: source
+                  in: query
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK

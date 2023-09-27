@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	pb "middle_platform/api/exchange_rate/v1"
 	biz "middle_platform/internal/biz"
@@ -20,14 +19,12 @@ func NewExchangeRateService(rate_info *biz.RateUsecase, logger log.Logger) *Exch
 }
 
 func (s *ExchangeRateService) SupportedCurrencies(ctx context.Context, req *pb.RateRequest) (*pb.RateReply, error) {
-	fmt.Println("usecase ", s.usecase)
 	res, err := s.usecase.SupportedCurrencies(ctx, req)
 
 	return res, err
 }
 
 func (s *ExchangeRateService) BaseCurrency(ctx context.Context, req *pb.BaseCurrencyRequest) (*pb.BaseCurrencyReply, error) {
-	fmt.Println("usecase ", s.usecase)
 	res, err := s.usecase.BaseCurrency(ctx, req)
 	return res, err
 }

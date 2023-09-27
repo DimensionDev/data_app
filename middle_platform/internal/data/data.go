@@ -106,19 +106,18 @@ func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
 	// 	_ = r.DataBaseCli.Close()
 	// 	r.DataBaseCli = db
 	// }
-	fmt.Println("before connect to db:", time.Now())
+	conn_start_time := time.Now().UnixMilli()
 	db, err := sdk.Open(context.Background(), r.DSN)
 	if err != nil {
 		fmt.Println("connect to db fail:", err)
 		return nil, err
 	}
-	fmt.Println("after connected to db:", time.Now())
+	conn_end_time := time.Now().UnixMilli()
+	fmt.Println("connect db duration(ms):", conn_end_time-conn_start_time)
 
 	start_time := time.Now().UnixMilli()
-	fmt.Println("before query:", start_time)
 	res, qerr := db.Query(str_sql)
 	end_time := time.Now().UnixMilli()
-	fmt.Println("after query:", end_time)
 	use_time := fmt.Sprintf("query duration: %d(ms)", end_time-start_time)
 	fmt.Println(use_time)
 

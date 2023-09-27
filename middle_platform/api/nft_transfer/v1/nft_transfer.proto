@@ -94,6 +94,7 @@ message GetReportSpamRequest {
 	// uint32 cursor = 3;
 	uint32 page = 3;
 	uint32 limit = 4[json_name = "page_size"];
+	string source = 5;
 }
 
 message GetReportSpamReply {
