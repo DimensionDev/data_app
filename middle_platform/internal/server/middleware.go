@@ -75,6 +75,7 @@ func custom_ratelimiter(handler middleware.Handler) middleware.Handler {
 			}
 			if context.Reached {
 				// rejected
+				fmt.Println("rate limit reached:", tr.RequestHeader().Get("Cf-Connecting-Ip"))
 				return nil, ErrLimitExceed
 			}
 		}
