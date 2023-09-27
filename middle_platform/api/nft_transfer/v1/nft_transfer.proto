@@ -71,6 +71,7 @@ message PostReportSpamRequest {
 	string status = 2;
 	optional string create_at = 3;
 	optional string update_at = 4;
+	optional string source = 5;
 }
 
 message PostReportSpamReply {
@@ -84,6 +85,7 @@ message SpamReport {
 	string status = 2;
 	optional string create_at = 3[json_name = "create_at"];
 	optional string update_at = 4[json_name = "update_at"];
+	optional string source = 5[json_name = "source"];
 }
 
 message GetReportSpamRequest {

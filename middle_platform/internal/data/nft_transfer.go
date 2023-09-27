@@ -230,13 +230,24 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 }
 
+func containsString(collection []string, target string) bool {
+	for _, s := range collection {
+		if s == target {
+			return true // 如果找到目标字符串，返回true
+		}
+	}
+	return false // 如果遍历完仍未找到目标字符串，返回false
+}
+
 func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReportSpamRequest) (*pb.PostReportSpamReply, error) {
 	//判断状态
 	collection_id := req.CollectionId
 	next_status := req.Status
+	req_source := req.Source
+	var source string
 
 	// 查找先前的 report 记录
-	query_str := fmt.Sprintf("select status,create_at from spam_report where collection_id = '%s'", collection_id)
+	query_str := fmt.Sprintf("select status,create_at,source from spam_report where collection_id = '%s'", collection_id)
 	res, err := r.data.data_query(query_str)
 	if err != nil {
 		fmt.Println("post spam report fail", collection_id, next_status)
@@ -249,12 +260,23 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 
 	const targetLayout = "2006-01-02T15:04:05Z"
 	if next_status == "reporting" {
+		if req_source == nil {
+			source = "firefly"
+		} else {
+			source = *req_source
+			sources := []string{"firefly", "mask-network"}
+			if !containsString(sources, source) {
+				fmt.Println("source:", source)
+				// return nil, errors.New(fmt.Sprintf("value of source field should be in %s", sources))
+				return nil, fmt.Errorf("value of source field should be in %s", sources)
+			}
+		}
 		// 检查 collection 是否已经被report
 		if row != nil {
 			if row[0] == next_status || row[0] == "rejected" {
 				create_at := row[1].(time.Time).Format(targetLayout)
 				update_at := time.Now().UTC().Format(targetLayout)
-				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s')", collection_id, next_status, create_at, update_at)
+				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at, update_at, row[2].(string))
 				insert_err := InsertIntoSpamReportTable(r, insert_str)
 				if insert_err != nil {
 					return nil, insert_err
@@ -264,6 +286,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 					Status:       next_status,
 					CreateAt:     &create_at,
 					UpdateAt:     &update_at,
+					Source:       &source,
 				}
 				return &pb.PostReportSpamReply{
 					Code:    200,
@@ -280,7 +303,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 		} else {
 			create_at := time.Now().UTC().Format(targetLayout)
 			update_at := create_at
-			insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s')", collection_id, next_status, create_at, update_at)
+			insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at, update_at, source)
 			insert_err := InsertIntoSpamReportTable(r, insert_str)
 			if insert_err != nil {
 				return nil, insert_err
@@ -290,6 +313,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 				Status:       next_status,
 				CreateAt:     &create_at,
 				UpdateAt:     &update_at,
+				Source:       &source,
 			}
 			return &pb.PostReportSpamReply{
 				Code:    200,
@@ -324,7 +348,8 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 					}
 				}
 
-				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s')", collection_id, next_status, create_at, update_at)
+				reply_source := row[2].(string)
+				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at, update_at, reply_source)
 				insert_err := InsertIntoSpamReportTable(r, insert_str)
 				if insert_err != nil {
 					return &pb.PostReportSpamReply{
@@ -334,11 +359,13 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 					}, nil
 				}
 				// 返回数据
+
 				data := pb.SpamReport{
 					CollectionId: collection_id,
 					Status:       next_status,
 					CreateAt:     &create_at,
 					UpdateAt:     &update_at,
+					Source:       &reply_source,
 				}
 				return &pb.PostReportSpamReply{
 					Code:    200,
