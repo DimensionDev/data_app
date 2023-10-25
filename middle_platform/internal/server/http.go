@@ -22,7 +22,7 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, nft *service
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
-			custom_ratelimiter,
+			NewCustomRateLimiter(),
 			ratelimit.Server(),
 		),
 	}

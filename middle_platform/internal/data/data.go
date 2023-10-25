@@ -2,12 +2,22 @@ package data
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
-	"github.com/bytehouse-cloud/driver-go/sdk"
+
+	"github.com/google/uuid"
+
+	bytehouse "github.com/bytehouse-cloud/driver-go"
+	// "gorm.io/gorm/logger"
+
+	// "github.com/bytehouse-cloud/driver-go/sdk"
+	"time"
+
+	_ "github.com/bytehouse-cloud/driver-go/sql"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
-	"time"
 
 	//"gorm.io/gorm"
 	"middle_platform/internal/conf"
@@ -24,104 +34,109 @@ type Data struct {
 	RedisCli *redis.Client
 	//DataBaseCli driver.Conn
 	// DataBaseCli *sdk.Gateway
-	dc  *conf.Data
-	DSN string
+	dc          *conf.Data
+	DataBaseCli *sql.DB
 }
 
 // NewData .
-func NewData(c *conf.Data, logger log.Logger, dsn string, redisCli *redis.Client) (*Data, func(), error) {
+func NewData(c *conf.Data, logger log.Logger, db_pool *sql.DB, redisCli *redis.Client) (*Data, func(), error) {
 	cleanup := func() {
 		log.NewHelper(logger).Info("closing the data resources")
+		db_pool.Close()
 	}
 	return &Data{
-		// DataBaseCli: dataBaseCli,
-		DSN:      dsn,
-		RedisCli: redisCli,
-		dc:       c,
+		DataBaseCli: db_pool,
+		RedisCli:    redisCli,
+		dc:          c,
 	}, cleanup, nil
 }
 
-func NewDataBase(c *conf.Data, logger log.Logger) (string, error) {
-	host := os.Getenv("DB_HOST")
+func NewDataBase(c *conf.Data, logger log.Logger) (*sql.DB, error) {
+	host := os.Getenv("BYTEHOUSE_DB_HOST")
 	if host == "" {
 		host = c.Database.Host
 	}
 
-	region := os.Getenv("DB_REGION")
-	if region == "" {
-		region = c.Database.Region
+	port := os.Getenv("BYTEHOUSE_DB_PORT")
+	if port == "" {
+		port = strconv.Itoa(int(c.Database.Port))
 	}
 
-	account := os.Getenv("DB_ACCOUNT")
-	if account == "" {
-		account = c.Database.Account
+	apiToken := os.Getenv("BYTEHOUSE_DB_API_TOKEN")
+	if apiToken == "" {
+		apiToken = c.Database.ApiToken
 	}
-	user := os.Getenv("DB_USER")
-	if user == "" {
-		user = c.Database.User
-	}
-	password := os.Getenv("DB_PWD")
-	if password == "" {
-		password = c.Database.Password
-	}
-	dbname := os.Getenv("DB_NAME")
+
+	dbname := os.Getenv("BYTEHOUSE_DB_NAME")
 	if dbname == "" {
 		dbname = c.Database.Dbname
 	}
 
+	dsn := fmt.Sprintf("tcp://%s:%s?secure=true&user=bytehouse&password=%s&database=%s", host, port, apiToken, dbname)
 	//dsn := fmt.Sprintf("tcp://%s?region=%s&account=%s&user=%s&password=%s&secure=true&database=%s", host, region, account, user, password, dbname)
-	dsn := fmt.Sprintf("tcp://%s?account=%s&user=%s&password=%s&secure=true&database=%s", host, account, user, password, dbname)
+	// dsn := fmt.Sprintf("tcp://%s?account=%s&user=%s&password=%s&secure=true&database=%s", host, account, user, password, dbname)
 
 	// fmt.Println("dsn: ", dsn)
-	return dsn, nil
+	pool, err := sql.Open("bytehouse", dsn)
+	if err != nil {
+		log.NewHelper(logger).Error("create bytehouse connection pool failed:", err)
+		return nil, errors.New("create bytehouse connection pool failed")
+	}
+	pool.SetMaxOpenConns(10)
+	pool.SetConnMaxIdleTime(time.Minute)
+	pool.SetConnMaxLifetime(time.Minute * 5)
+	pool.SetMaxIdleConns(10)
+	return pool, nil
 }
 
-// func (r *Data) Conn() (*sdk.Gateway, error) {
-// 	//dsn := fmt.Sprintf("tcp://%s?region=%s&account=%s&user=%s&password=%s&secure=true&database=%s", host, region, account, user, password, dbname)
-// 	dsn := fmt.Sprintf("tcp://%s?account=%s&user=%s&password=%s&secure=true&database=%s", r.dc.Database.Host, r.dc.Database.Account, r.dc.Database.User, r.dc.Database.Password, r.dc.Database.Dbname)
-
-// 	db, err := sdk.Open(context.Background(), dsn)
-// 	if err != nil {
-// 		fmt.Printf("error = %v", err)
-// 		return nil, nil
-// 	}
-// 	if err != nil {
-// 		//log.NewHelper(logger).Errorf("Failed to connect to database", err)
-// 		fmt.Print("Failed to connect to database", err)
-// 		return nil, err
-// 	}
-// 	//log.NewHelper(logger).Info("Connected to DataBase!")
-// 	fmt.Print("Connected to DataBase!\n")
-// 	return db, nil
-// }
-
-func (r *Data) data_query(str_sql string) (*sdk.QueryResult, error) {
-
-	// if err := r.DataBaseCli.Ping(); err != nil {
-	// 	// re-establish connection
-	// 	db, connErr := r.Conn()
-	// 	if db == nil {
-	// 		return nil, connErr
-	// 	}
-	// 	_ = r.DataBaseCli.Close()
-	// 	r.DataBaseCli = db
-	// }
-	conn_start_time := time.Now().UnixMilli()
-	db, err := sdk.Open(context.Background(), r.DSN)
-	if err != nil {
-		fmt.Println("connect to db fail:", err)
+func (r *Data) data_query(str_sql string) (*sql.Rows, error) {
+	queryCtx := bytehouse.NewQueryContext(context.Background())
+	//set the query ID here, duplicate query IDs will be rejected
+	query_id := fmt.Sprintf("firefly-%v", uuid.New().String())
+	fmt.Println("query ID:", query_id)
+	queryCtx.SetQueryID(query_id)
+	if err := queryCtx.AddQuerySetting("max_block_size", "2000"); err != nil {
+		log.Error("query_id %v failed to add query setting err = %v", query_id, err)
 		return nil, err
 	}
-	conn_end_time := time.Now().UnixMilli()
-	fmt.Println("connect db duration(ms):", conn_end_time-conn_start_time)
+
+	if err := r.DataBaseCli.Ping(); err != nil {
+		log.Error("failed to ping err = %v", err)
+		return nil, err
+	}
 
 	start_time := time.Now().UnixMilli()
-	res, qerr := db.Query(str_sql)
+	rows, qerr := r.DataBaseCli.QueryContext(queryCtx, str_sql)
 	end_time := time.Now().UnixMilli()
 	use_time := fmt.Sprintf("query duration: %d(ms)", end_time-start_time)
 	fmt.Println(use_time)
 
-	return res, qerr
+	return rows, qerr
+}
+
+func (r *Data) data_query_single(str_sql string) (*sql.Row, error) {
+	queryCtx := bytehouse.NewQueryContext(context.Background())
+	//set the query ID here, duplicate query IDs will be rejected
+	query_id := fmt.Sprintf("firefly-%v", uuid.New().String())
+	fmt.Println("query ID:", query_id)
+	queryCtx.SetQueryID(query_id)
+	if err := queryCtx.AddQuerySetting("max_block_size", "2000"); err != nil {
+		log.Error("query_id %v failed to add query setting err = %v", query_id, err)
+		return nil, err
+	}
+
+	if err := r.DataBaseCli.Ping(); err != nil {
+		log.Error("failed to ping err = %v", err)
+		return nil, err
+	}
+
+	start_time := time.Now().UnixMilli()
+	row := r.DataBaseCli.QueryRowContext(queryCtx, str_sql)
+	end_time := time.Now().UnixMilli()
+	use_time := fmt.Sprintf("query duration: %d(ms)", end_time-start_time)
+	fmt.Println(use_time)
+
+	return row, nil
 }
 
 func NewRedis(c *conf.Data, logger log.Logger) (*redis.Client, func(), error) {
