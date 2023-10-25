@@ -35,7 +35,8 @@ service NftTransfer {
 
 	rpc GetTransferNft (GetTransferNftRequest) returns (GetTransferNftReply){
 		option (google.api.http) = {
-			get: "/v1/nfts/transfer"
+			post: "/v1/nfts/transfer"
+			body: "*"
 		};
 	};
 }

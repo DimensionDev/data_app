@@ -121,33 +121,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/api.nft_transfer.v1.PostReportSpamReply'
     /v1/nfts/transfer:
-        get:
+        post:
             tags:
                 - NftTransfer
             operationId: NftTransfer_GetTransferNft
-            parameters:
-                - name: contractAddress
-                  in: query
-                  schema:
-                    type: string
-                - name: eventType
-                  in: query
-                  schema:
-                    type: string
-                - name: owners
-                  in: query
-                  schema:
-                    type: string
-                - name: page
-                  in: query
-                  schema:
-                    type: integer
-                    format: uint32
-                - name: page_size
-                  in: query
-                  schema:
-                    type: integer
-                    format: uint32
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.nft_transfer.v1.GetTransferNftRequest'
+                required: true
             responses:
                 "200":
                     description: OK
@@ -184,13 +167,28 @@ paths:
                 - name: limit
                   in: query
                   schema:
-                    type: integer
-                    format: uint64
+                    type: string
                 - name: cursor
                   in: query
                   schema:
-                    type: integer
-                    format: uint64
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.nft_transfer.v1.GetNftTransferReply'
+        post:
+            tags:
+                - NftTransfer
+            operationId: NftTransfer_GetNftTransfer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.nft_transfer.v1.GetNftTransferRequest'
+                required: true
             responses:
                 "200":
                     description: OK
@@ -245,6 +243,23 @@ components:
                     type: string
                 data:
                     $ref: '#/components/schemas/api.nft_transfer.v1.PnftTransferSt'
+        api.nft_transfer.v1.GetNftTransferRequest:
+            type: object
+            properties:
+                address:
+                    type: string
+                network:
+                    type: string
+                type:
+                    type: string
+                orderBy:
+                    type: string
+                orderDirection:
+                    type: string
+                limit:
+                    type: string
+                cursor:
+                    type: string
         api.nft_transfer.v1.GetReportSpamReply:
             type: object
             properties:
@@ -259,8 +274,7 @@ components:
                     type: integer
                     format: uint32
                 total:
-                    type: integer
-                    format: uint64
+                    type: string
                 data:
                     type: array
                     items:
@@ -278,12 +292,26 @@ components:
                     type: integer
                     format: uint32
                 total:
-                    type: integer
-                    format: uint64
+                    type: string
                 data:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.nft_transfer.v1.TransferNft'
+        api.nft_transfer.v1.GetTransferNftRequest:
+            type: object
+            properties:
+                contractAddress:
+                    type: string
+                eventType:
+                    type: string
+                owners:
+                    type: string
+                page:
+                    type: integer
+                    format: uint32
+                page_size:
+                    type: integer
+                    format: uint32
         api.nft_transfer.v1.NodeStArr:
             type: object
             properties:
