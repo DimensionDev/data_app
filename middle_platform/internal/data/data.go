@@ -82,7 +82,7 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sql.DB, error) {
 		log.NewHelper(logger).Error("create bytehouse connection pool failed:", err)
 		return nil, errors.New("create bytehouse connection pool failed")
 	}
-	pool.SetMaxOpenConns(10)
+	pool.SetMaxOpenConns(200)
 	pool.SetConnMaxIdleTime(time.Minute)
 	pool.SetConnMaxLifetime(time.Minute * 5)
 	pool.SetMaxIdleConns(10)
