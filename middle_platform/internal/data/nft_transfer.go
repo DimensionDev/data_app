@@ -93,6 +93,16 @@ type SaleInfo struct {
 	Total_price json.Number `json:"total_price"`
 }
 
+type transaction struct {
+	chain            string
+	transaction_hash string
+	owner            string
+	event_type       string
+	block_timestamp  time.Time
+}
+
+const ZERO_ADDRESS string = "0x0000000000000000000000000000000000000000"
+
 // NewNftTransferRepo .
 
 func NewNftTransferRepo(data *Data, logger log.Logger) biz.NftTransferRepo {
@@ -248,15 +258,30 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 
 	// 查找先前的 report 记录
 	query_str := fmt.Sprintf("select status,create_at,source from spam_report where collection_id = '%s'", collection_id)
-	res, err := r.data.data_query(query_str)
+	res, err := r.data.data_query_single(query_str)
 	if err != nil {
 		fmt.Println("post spam report fail", collection_id, next_status)
 		return nil, err
 	}
-	row, ok := res.NextRow()
-	if !ok {
-		row = nil
+
+	type report struct {
+		status    string
+		create_at time.Time
+		source    string
 	}
+	var rt report
+	if res != nil {
+		if err := res.Scan(&rt.status, &rt.create_at, &rt.source); err != nil {
+			fmt.Printf("error = %v", err)
+			return nil, err
+		}
+	}
+
+	fmt.Println("rt:", rt)
+	// row, ok := res.NextRow()
+	// if !ok {
+	// 	row = nil
+	// }
 
 	const targetLayout = "2006-01-02T15:04:05Z"
 	if next_status == "reporting" {
@@ -272,11 +297,11 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 			}
 		}
 		// 检查 collection 是否已经被report
-		if row != nil {
-			if row[0] == next_status || row[0] == "rejected" {
-				create_at := row[1].(time.Time).Format(targetLayout)
+		if res != nil {
+			if rt.status == next_status || rt.status == "rejected" {
+				create_at := rt.create_at.Format(targetLayout)
 				update_at := time.Now().UTC().Format(targetLayout)
-				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at, update_at, row[2].(string))
+				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at, update_at, rt.source)
 				insert_err := InsertIntoSpamReportTable(r, insert_str)
 				if insert_err != nil {
 					return nil, insert_err
@@ -296,7 +321,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 			} else {
 				return &pb.PostReportSpamReply{
 					Code:    400,
-					Message: fmt.Sprintf("this report of %s is already %s", collection_id, row[0]),
+					Message: fmt.Sprintf("this report of %s is already %s", collection_id, rt.status),
 					Data:    nil,
 				}, nil
 			}
@@ -322,11 +347,11 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 			}, nil
 		}
 	} else if next_status == "approved" || next_status == "rejected" {
-		if row != nil {
-			fmt.Println(row)
-			if row[0] == "reporting" {
+		if res != nil {
+			fmt.Println(res)
+			if rt.status == "reporting" {
 				update_at := time.Now().UTC().Format(targetLayout)
-				create_at := row[1].(time.Time).Format(targetLayout)
+				create_at := rt.create_at.Format(targetLayout)
 
 				// 更新 collection 的 spam_score
 				if next_status == "approved" {
@@ -348,7 +373,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 					}
 				}
 
-				reply_source := row[2].(string)
+				reply_source := rt.source
 				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at, update_at, reply_source)
 				insert_err := InsertIntoSpamReportTable(r, insert_str)
 				if insert_err != nil {
@@ -375,7 +400,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 			} else {
 				return &pb.PostReportSpamReply{
 					Code:    400,
-					Message: fmt.Sprintf("this report of %s is already %s", collection_id, row[0]),
+					Message: fmt.Sprintf("this report of %s is already %s", collection_id, rt.status),
 					Data:    nil,
 				}, nil
 				// return nil, fmt.Errorf("the report of colleciont %s have beed %s", collection_id, row[0])
@@ -519,21 +544,29 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 
 	// row := make([]interface{}, 0)
 	const targetLayout = "2006-01-02T15:04:05Z"
-	for {
-		row, ok := res.NextRow()
-		if !ok {
-			break
+	type report struct {
+		collection_id string
+		status        string
+		created_at    time.Time
+		update_at     time.Time
+		source        string
+	}
+	var rt report
+	for res.Next() {
+		if err := res.Scan(&rt.collection_id, &rt.status, &rt.created_at, &rt.update_at, &rt.source); err != nil {
+			log.Error("failed to scan row err = %v", err)
+			return nil, err
 		}
 		var spam_report pb.SpamReport
 		var create_at string
 		var update_at string
-		spam_report.CollectionId = row[0].(string)
-		spam_report.Status = row[1].(string)
-		create_at = row[2].(time.Time).Format(targetLayout)
+		spam_report.CollectionId = rt.collection_id
+		spam_report.Status = rt.status
+		create_at = rt.created_at.Format(targetLayout)
 		spam_report.CreateAt = &create_at
-		update_at = row[3].(time.Time).Format(targetLayout)
+		update_at = rt.update_at.Format(targetLayout)
 		spam_report.UpdateAt = &update_at
-		reply_source := row[4].(string)
+		reply_source := rt.source
 		spam_report.Source = &reply_source
 		report_list = append(report_list, &spam_report)
 	}
@@ -557,17 +590,22 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 }
 
 func (r *NftTransferRepo) GetTotalNumberOfSpamReport(query_str string) (uint64, error) {
-	res, err := r.data.data_query(query_str)
+	res, err := r.data.data_query_single(query_str)
 	if err != nil {
 		fmt.Println("query total count for spam reports err:", err)
 		return uint64(0), err
 	}
-	row, ok := res.NextRow()
-	if !ok {
+	if res == nil {
+		// if !ok {
 		fmt.Println("query fail from bytehouse")
 		return uint64(0), errors.New("query fail from bytehouse")
 	} else {
-		return row[0].(uint64), nil
+		var count uint64
+		if err := res.Scan(&count); err != nil {
+			log.Error("failed to scan row err = %v", err)
+			return 0, err
+		}
+		return count, nil
 	}
 }
 
@@ -694,6 +732,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		return nil, 0, err
 	}
 
+	var ts transaction
 	var chains []string
 	var hashs []string
 	var _owners []string
@@ -702,20 +741,28 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	dup_keys = make(map[string]bool)
 	var action_num uint64 = 0
 
-	for {
-		row, ok := first_res.NextRow()
-		if !ok {
-			break
+	for first_res.Next() {
+		if err := first_res.Scan(
+			&ts.chain,
+			&ts.transaction_hash,
+			&ts.owner,
+			&ts.event_type,
+			&ts.block_timestamp); err != nil {
+			log.Error("failed to scan row err = %v", err)
+			return nil, 0, err
 		}
-		action_num += 1
-		chains = append(chains, row[0].(string))
-		hashs = append(hashs, row[1].(string))
-		_owners = append(_owners, row[2].(string))
-		event_types = append(event_types, row[3].(string))
-		dups := []string{row[0].(string), row[1].(string), row[2].(string), row[3].(string)}
+
+		chains = append(chains, ts.chain)
+		hashs = append(hashs, ts.transaction_hash)
+		_owners = append(_owners, ts.owner)
+		event_types = append(event_types, ts.event_type)
+		dups := []string{ts.chain, ts.transaction_hash, ts.owner, ts.event_type}
 		dup_string := strings.Join(dups, "_")
 		dup_keys[dup_string] = true
 	}
+	fmt.Println("test ts:", ts)
+	// release connection
+	first_res.Close()
 
 	chain_condition := combineAndRemoveDuplicates("chain", chains)
 	hash_condition := combineAndRemoveDuplicates("transaction_hash", hashs)
@@ -745,109 +792,78 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	fmt.Println("str_sql:", str_sql_p)
 
-	res, err := r.data.data_query(str_sql_p)
+	log_rows, err := r.data.data_query(str_sql_p)
 
 	if err != nil {
 		return nil, 0, err
 
 	}
 
+	type transaction_log struct {
+		chain                 string
+		transaction_initiator string
+		transaction_hash      string
+		block_timestamp       time.Time
+		event_type            string
+		log_index             uint32
+		contract_address      string
+		token_id              string
+		address_from          *string
+		address_to            *string
+		owner                 string
+		sale_details          *string
+	}
+
 	var data_nodes map[string]NftTransfertmpSt
 
 	data_nodes = make(map[string]NftTransfertmpSt)
 
-	for {
-
-		row, ok := res.NextRow()
-		if !ok {
-			break
+	for log_rows.Next() {
+		var ts_log transaction_log
+		if err := log_rows.Scan(
+			&ts_log.chain,
+			&ts_log.transaction_initiator,
+			&ts_log.transaction_hash,
+			&ts_log.block_timestamp,
+			&ts_log.event_type,
+			&ts_log.log_index,
+			&ts_log.contract_address,
+			&ts_log.token_id,
+			&ts_log.address_from,
+			&ts_log.address_to,
+			&ts_log.owner,
+			&ts_log.sale_details); err != nil {
+			log.Error("failed to scan row err = %v", err)
+			return nil, 0, err
 		}
 
 		// 这里要去除查出来的多余的记录
-		dups := []string{row[0].(string), row[2].(string), row[10].(string), row[4].(string)}
+		dups := []string{ts_log.chain, ts_log.transaction_hash, ts_log.owner, ts_log.event_type}
 		dup_string := strings.Join(dups, "_")
-		_, ok = dup_keys[dup_string]
+		_, ok := dup_keys[dup_string]
 		if !ok {
 			continue
 		}
 
 		var node NftTransfertmpSt
 
-		if row[0] != nil {
-
-			node.network = row[0].(string)
-
-			if node.network == "bsc" {
-
-				node.network = "binance_smart_chain"
-
-			}
-
-		} else {
-
-			node.network = ""
-
+		node.network = ts_log.chain
+		if node.network == "bsc" {
+			node.network = "binance_smart_chain"
 		}
-
-		if row[1] != nil {
-
-			node.init_address = row[1].(string)
-
-		} else {
-
-			node.init_address = ""
-
-		}
-
-		if row[2] != nil {
-
-			node.hash = row[2].(string)
-
-		} else {
-
-			node.hash = ""
-
-		}
+		node.init_address = ts_log.transaction_initiator
+		node.hash = ts_log.transaction_hash
 
 		const targetLayout = "2006-01-02T15:04:05Z"
-		if row[3] != nil {
+		node.timestamp = ts_log.block_timestamp.Format(targetLayout)
+		node.event_type = ts_log.event_type
+		node.contract_address = ts_log.contract_address
+		node.owner = ts_log.owner
 
-			node.timestamp = row[3].(time.Time).Format(targetLayout)
-
+		if ts_log.sale_details != nil {
+			node.sale_details = *ts_log.sale_details
 		} else {
-
-			node.timestamp = ""
-
-		}
-
-		if row[4] != nil {
-
-			node.event_type = row[4].(string)
-
-		} else {
-
-			node.event_type = ""
-
-		}
-
-		if row[6] != nil {
-
-			node.contract_address = row[6].(string)
-
-		} else {
-
-			node.contract_address = ""
-
-		}
-
-		if row[10] != nil {
-
-			node.owner = row[10].(string)
-
-		}
-
-		if row[11] != nil {
-			node.sale_details = row[11].(string)
+			node.sale_details = ""
 		}
 
 		node.tag = "collectible"
@@ -858,106 +874,44 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 		var action DataActionST
 
-		if row[8] != nil && row[8] != "" {
-
-			action.address_from = row[8].(string)
-
+		if ts_log.address_from != nil && *ts_log.address_from != "" {
+			action.address_from = *ts_log.address_from
 		} else {
-
-			action.address_from = "0x0000000000000000000000000000000000000000"
-
+			action.address_from = ZERO_ADDRESS
 		}
 
-		if row[9] != nil && row[9] != "" {
-
-			action.address_to = row[9].(string)
-
+		if ts_log.address_to != nil && *ts_log.address_to != "" {
+			action.address_to = *ts_log.address_to
 		} else {
-
-			action.address_to = "0x0000000000000000000000000000000000000000"
-
+			action.address_to = ZERO_ADDRESS
 		}
 
 		action.tag = "collectible"
-
-		if row[4] != nil {
-
-			action.event_type = row[4].(string)
-
-		} else {
-
-			action.event_type = ""
-
-		}
-
-		if row[5] != nil {
-
-			action.index = row[5].(uint32)
-
-		} else {
-
-			action.index = 0
-
-		}
-
-		if row[7] != nil {
-
-			action.token_id = row[7].(string)
-
-		} else {
-
-			action.token_id = ""
-
-		}
+		action.event_type = ts_log.event_type
+		action.index = ts_log.log_index
+		action.token_id = ts_log.token_id
 
 		if action.event_type == "sale" {
-
 			action.event_type = "trade"
-
 		}
 
 		action_ukey := strconv.FormatUint(uint64(action.index), 10)
 
 		if _, ok := data_nodes[node_ukey]; ok {
-
 			if _, ok := data_nodes[node_ukey].actios[action_ukey]; ok {
-
 			} else {
-
 				data_nodes[node_ukey].actios[action_ukey] = action
-
 			}
-
 		} else {
-
 			node.actios[action_ukey] = action
-
 			data_nodes[node_ukey] = node
-
 		}
-
 	}
 
 	if len(data_nodes) == 0 {
-
-		//fmt.Print("chanbnel aaaaaaaaaaaaaa\n")
-
-		//bbbb := <-ch
-
-		//fmt.Print("chanbnel aaaaaaaaaaaaaa", bbbb)
-
 		return nil, action_num, nil
-
 	}
-
-	//fmt.Print("chanbnel 11111111111111111111111111111\n")
-
-	//utotal := <-ch
-
-	//fmt.Print("chan value", utotal)
-
 	return data_nodes, action_num, nil
-
 }
 
 func combineAndRemoveDuplicates(field string, strArr []string) string {
@@ -1010,7 +964,7 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 		limit = req.Limit
 	}
 	query := fmt.Sprintf(
-		"select * from transfer_nft %s order by create_time desc limit %d,%d",
+		"select nft_id,chain,contract_address,token_id,collection_id,event_type,address_from,address_to,block_timestamp,owner from transfer_nft %s order by create_time desc limit %d,%d",
 		whereCondition, (page-1)*limit, limit)
 	fmt.Println("query:", query)
 	totalQuery := fmt.Sprintf("select count(1) from transfer_nft %s", whereCondition)
@@ -1031,43 +985,53 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 	}
 
 	var transferNftList []*pb.TransferNft
-	for {
-		row, ok := res.NextRow()
-		if !ok {
-			break
-		}
+	type transfer struct {
+		nft_id           string
+		chain            string
+		contract_address string
+		token_id         string
+		collection_id    string
+		event_type       string
+		address_from     *string
+		address_to       *string
+		block_timestamp  time.Time
+		owner            string
+	}
+	var tf transfer
+	for res.Next() {
+		// row, ok := res.NextRow()
+		// if !ok {
+		// 	break
+		// }
+
 		var transferNft pb.TransferNft
-		if row[0] != nil {
-			transferNft.NftId = row[0].(string)
+		if err := res.Scan(&tf.nft_id, &tf.chain, &tf.contract_address, &tf.token_id, &tf.collection_id, &tf.event_type, &tf.address_from, &tf.address_to, &tf.block_timestamp, &tf.owner); err != nil {
+			log.Error("failed to scan row err = %v", err)
+			return &pb.GetTransferNftReply{
+				Code: 500,
+				Data: nil,
+			}, err
 		}
-		if row[1] != nil {
-			transferNft.Chain = row[1].(string)
+
+		transferNft.NftId = tf.nft_id
+		transferNft.Chain = tf.chain
+		transferNft.ContractAddress = tf.contract_address
+		transferNft.TokenId = tf.token_id
+		transferNft.CollectionId = tf.collection_id
+		transferNft.EventType = tf.event_type
+		if tf.address_from == nil {
+			transferNft.AddressFrom = ""
+		} else {
+			transferNft.AddressFrom = *tf.address_from
 		}
-		if row[2] != nil {
-			transferNft.ContractAddress = row[2].(string)
+		if tf.address_to == nil {
+			transferNft.AddressTo = ""
+		} else {
+			transferNft.AddressTo = *tf.address_to
 		}
-		if row[3] != nil {
-			transferNft.TokenId = row[3].(string)
-		}
-		if row[4] != nil {
-			transferNft.CollectionId = row[4].(string)
-		}
-		if row[5] != nil {
-			transferNft.EventType = row[5].(string)
-		}
-		if row[6] != nil {
-			transferNft.AddressFrom = row[6].(string)
-		}
-		if row[7] != nil {
-			transferNft.AddressTo = row[7].(string)
-		}
-		if row[9] != nil {
-			blockTime := row[9].(time.Time)
-			transferNft.BlockTimestamp = blockTime.Format("2006-01-02T15:04:05Z")
-		}
-		if row[17] != nil {
-			transferNft.Owner = row[17].(string)
-		}
+
+		transferNft.BlockTimestamp = tf.block_timestamp.Format("2006-01-02T15:04:05Z")
+		transferNft.Owner = tf.owner
 		transferNftList = append(transferNftList, &transferNft)
 	}
 

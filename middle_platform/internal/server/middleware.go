@@ -41,48 +41,51 @@ func NewRateLimiter() *limiter.Limiter {
 	return instance
 }
 
-var rate_limiter = NewRateLimiter()
+// var rate_limiter = NewRateLimiter()
 
-func custom_ratelimiter(handler middleware.Handler) middleware.Handler {
-	return func(ctx context.Context, req interface{}) (reply interface{}, err error) {
-		if rate_limiter == nil {
-			fmt.Println("create rate limiter failed")
-			reply, err = handler(ctx, req)
-			return
-		}
-
-		tr, ok := transport.FromServerContext(ctx)
-		if !ok {
-			fmt.Println("get server context failed")
-			reply, err = handler(ctx, req)
-			return
-		}
-		fmt.Println("Cf-Connecting-Ip:", tr.RequestHeader().Get("Cf-Connecting-Ip"))
-		// fmt.Println("uri:", tr.Operation())
-		if tr.Operation() == "/api.nft_transfer.v1.NftTransfer/PostReportSpam" && tr.RequestHeader().Get("Cf-Connecting-Ip") != "" {
-
-			ctx1, ok := ctx.(http.Context)
-			if !ok {
-				fmt.Println("get http context failed")
+func NewCustomRateLimiter() func(handler middleware.Handler) middleware.Handler {
+	rate_limiter := NewRateLimiter()
+	return func(handler middleware.Handler) middleware.Handler {
+		return func(ctx context.Context, req interface{}) (reply interface{}, err error) {
+			if rate_limiter == nil {
+				fmt.Println("create rate limiter failed")
 				reply, err = handler(ctx, req)
 				return
 			}
-			key := rate_limiter.GetIPKey(ctx1.Request())
-			context, err := rate_limiter.Get(ctx, key)
 
-			if err != nil {
-				return nil, ErrGetLimitKey
+			tr, ok := transport.FromServerContext(ctx)
+			if !ok {
+				fmt.Println("get server context failed")
+				reply, err = handler(ctx, req)
+				return
 			}
-			if context.Reached {
-				// rejected
-				fmt.Println("rate limit reached:", tr.RequestHeader().Get("Cf-Connecting-Ip"))
-				return nil, ErrLimitExceed
+			fmt.Println("Cf-Connecting-Ip:", tr.RequestHeader().Get("Cf-Connecting-Ip"))
+			// fmt.Println("uri:", tr.Operation())
+			if tr.Operation() == "/api.nft_transfer.v1.NftTransfer/PostReportSpam" && tr.RequestHeader().Get("Cf-Connecting-Ip") != "" {
+
+				ctx1, ok := ctx.(http.Context)
+				if !ok {
+					fmt.Println("get http context failed")
+					reply, err = handler(ctx, req)
+					return
+				}
+				key := rate_limiter.GetIPKey(ctx1.Request())
+				context, err := rate_limiter.Get(ctx, key)
+
+				if err != nil {
+					return nil, ErrGetLimitKey
+				}
+				if context.Reached {
+					// rejected
+					fmt.Println("rate limit reached:", tr.RequestHeader().Get("Cf-Connecting-Ip"))
+					return nil, ErrLimitExceed
+				}
 			}
+
+			// allowed
+			reply, err = handler(ctx, req)
+			return
 		}
-
-		// allowed
-		reply, err = handler(ctx, req)
-		return
 	}
 }
 

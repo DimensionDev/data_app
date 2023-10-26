@@ -33,6 +33,8 @@ message Data {
     string  user = 4;
     string  password = 5;
     string  dbname = 6;
+    int32 port = 7;
+    string apiToken = 8;
   }
   message Redis {
     string network = 1;
