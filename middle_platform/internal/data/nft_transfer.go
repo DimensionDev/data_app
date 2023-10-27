@@ -732,6 +732,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		return nil, 0, err
 	}
 
+	// release connection
+	defer first_res.Close()
+
 	var ts transaction
 	var chains []string
 	var hashs []string
@@ -751,7 +754,8 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 			log.Error("failed to scan row err = %v", err)
 			return nil, 0, err
 		}
-
+		fmt.Println("chain:", ts.chain)
+		fmt.Println("transaction_hash:", ts.transaction_hash)
 		chains = append(chains, ts.chain)
 		hashs = append(hashs, ts.transaction_hash)
 		_owners = append(_owners, ts.owner)
@@ -760,9 +764,10 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		dup_string := strings.Join(dups, "_")
 		dup_keys[dup_string] = true
 	}
-	fmt.Println("test ts:", ts)
-	// release connection
-	first_res.Close()
+
+	if len(chains) == 0 && len(_owners) == 0 {
+		return nil, 0, nil
+	}
 
 	chain_condition := combineAndRemoveDuplicates("chain", chains)
 	hash_condition := combineAndRemoveDuplicates("transaction_hash", hashs)
