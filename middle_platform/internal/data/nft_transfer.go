@@ -217,7 +217,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 		})
 
 	}
-
+	fmt.Println("action_num:", action_num)
 	if req.Limit == action_num {
 
 		str := strconv.FormatUint(uint64(req.Cursor+req.Limit), 10)
@@ -754,6 +754,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 			log.Error("failed to scan row err = %v", err)
 			return nil, 0, err
 		}
+		action_num += 1
 		chains = append(chains, ts.chain)
 		hashs = append(hashs, ts.transaction_hash)
 		_owners = append(_owners, ts.owner)
