@@ -754,8 +754,6 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 			log.Error("failed to scan row err = %v", err)
 			return nil, 0, err
 		}
-		fmt.Println("chain:", ts.chain)
-		fmt.Println("transaction_hash:", ts.transaction_hash)
 		chains = append(chains, ts.chain)
 		hashs = append(hashs, ts.transaction_hash)
 		_owners = append(_owners, ts.owner)
