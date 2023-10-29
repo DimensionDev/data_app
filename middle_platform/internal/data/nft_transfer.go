@@ -272,8 +272,13 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 	var rt report
 	if res != nil {
 		if err := res.Scan(&rt.status, &rt.create_at, &rt.source); err != nil {
-			fmt.Printf("error = %v", err)
-			return nil, err
+			fmt.Println(err.Error())
+			if err.Error() == "sql: no rows in result set" {
+				res = nil
+			} else {
+				fmt.Printf("error = %v", err)
+				return nil, err
+			}
 		}
 	}
 
