@@ -72,7 +72,7 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sql.DB, error) {
 		dbname = c.Database.Dbname
 	}
 
-	dsn := fmt.Sprintf("tcp://%s:%s?secure=true&user=bytehouse&enable_hybrid_allocation=1&password=%s&database=%s", host, port, apiToken, dbname)
+	dsn := fmt.Sprintf("tcp://%s:%s?secure=true&user=bytehouse&password=%s&database=%s", host, port, apiToken, dbname)
 	//dsn := fmt.Sprintf("tcp://%s?region=%s&account=%s&user=%s&password=%s&secure=true&database=%s", host, region, account, user, password, dbname)
 	// dsn := fmt.Sprintf("tcp://%s?account=%s&user=%s&password=%s&secure=true&database=%s", host, account, user, password, dbname)
 
