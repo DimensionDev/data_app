@@ -727,7 +727,12 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		group_by += " group by chain,transaction_hash,owner,event_type,block_timestamp"
 	}
 
-	spam_filter_condition := " and collection_id in (select collection_id from collections2) "
+	re_filter_str := " match(name, '(^(([1-9][0-9]{3}\\\\$)|(\\\\$[1-9][0-9]{3})) [a-zA-Z]+)|(.*lens-Follower$)') "
+	collection_sub_query := " (select collection_id from collections_new_test where spam_score>=50 or " + re_filter_str + ") "
+	spam_filter_condition := " and collection_id not in  " + collection_sub_query
+	// first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_index " + str_where + spam_filter_condition + group_by + str_order + str_limit
+
+	// spam_filter_condition := " and collection_id in (select collection_id from collections2) "
 	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_new " + str_where + spam_filter_condition + group_by + str_order + str_limit
 	fmt.Println("first_q:", first_q)
 	first_res, err := r.data.data_query(first_q)
