@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/go-kratos/kratos/v2/errors"
 	"middle_platform/internal/biz"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -46,6 +47,9 @@ func (s *NftTransferService) PostReportSpam(ctx context.Context, req *pb.PostRep
 }
 
 func (s *NftTransferService) GetTransferNft(ctx context.Context, req *pb.GetTransferNftRequest) (*pb.GetTransferNftReply, error) {
+	if req.ContractAddress == "" {
+		return nil, errors.New(400, "contract address is empty", "Failed to get transfer nft")
+	}
 	res, err := s.uc.GetTransferNft(ctx, req)
 	return res, err
 }
