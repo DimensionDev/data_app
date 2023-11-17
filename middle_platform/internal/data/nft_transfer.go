@@ -438,7 +438,8 @@ func InsertIntoSpamReportTable(r *NftTransferRepo, insert_str string) error {
 }
 
 func UpdataCollectionSpamScore(r *NftTransferRepo, collection_id string) error {
-	update_str := fmt.Sprintf("update collections_new_test set spam_score=100 where collection_id='%s'", collection_id)
+	update_str := fmt.Sprintf("insert into spam_collections_with_bucket values ('%s',100,'')", collection_id)
+	// update_str := fmt.Sprintf("update collections_new_test set spam_score=100 where collection_id='%s'", collection_id)
 	// update_str := fmt.Sprintf("insert into collections (collection_id,spam_score) values ('%s', 100)", "collection_id")
 	fmt.Println("update_str:", update_str)
 	_, err := r.data.data_query(update_str)
@@ -625,7 +626,8 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	owners := strings.Split(req.Address, ",")
 
-	str_where := "where batch_transfer_index = 0 and owner in ('"
+	//str_where := "where batch_transfer_index = 0 and owner in ('"
+	str_where := "where owner in ('"
 
 	for i, owner := range owners {
 
@@ -727,13 +729,14 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		group_by += " group by chain,transaction_hash,owner,event_type,block_timestamp"
 	}
 
-	re_filter_str := " match(name, '(^(([1-9][0-9]{3}\\\\$)|(\\\\$[1-9][0-9]{3})) [a-zA-Z]+)|(.*lens-Follower$)') "
-	collection_sub_query := " (select collection_id from collections_new_test where spam_score>=50 or " + re_filter_str + ") "
-	spam_filter_condition := " and collection_id not in  " + collection_sub_query
+	//re_filter_str := " match(name, '(^(([1-9][0-9]{3}\\\\$)|(\\\\$[1-9][0-9]{3})) [a-zA-Z]+)|(.*lens-Follower$)') "
+	//collection_sub_query := " (select collection_id from collections_new_test where spam_score>=50 or " + re_filter_str + ") "
+	//spam_filter_condition := " and collection_id not in  " + collection_sub_query
 	// first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_index " + str_where + spam_filter_condition + group_by + str_order + str_limit
 
-	// spam_filter_condition := " and collection_id in (select collection_id from collections2) "
-	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_new " + str_where + spam_filter_condition + group_by + str_order + str_limit
+	spam_filter_condition := " and collection_id not in (select collection_id from spam_collections_with_bucket ) "
+	//first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_new " + str_where + spam_filter_condition + group_by + str_order + str_limit
+	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from nft_transfer_summary " + str_where + spam_filter_condition + str_order + str_limit
 	fmt.Println("first_q:", first_q)
 	first_res, err := r.data.data_query(first_q)
 	if err != nil {
@@ -751,6 +754,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	var dup_keys map[string]bool
 	dup_keys = make(map[string]bool)
 	var action_num uint64 = 0
+	var timestamps []time.Time
 
 	for first_res.Next() {
 		if err := first_res.Scan(
@@ -767,6 +771,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		hashs = append(hashs, ts.transaction_hash)
 		_owners = append(_owners, ts.owner)
 		event_types = append(event_types, ts.event_type)
+		timestamps = append(timestamps, ts.block_timestamp)
 		dups := []string{ts.chain, ts.transaction_hash, ts.owner, ts.event_type}
 		dup_string := strings.Join(dups, "_")
 		dup_keys[dup_string] = true
@@ -776,14 +781,32 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		return nil, 0, nil
 	}
 
+	maxTime := timestamps[0]
+	minTime := timestamps[0]
+
+	// 遍历数组，比较找到最大和最小时间
+	for _, t := range timestamps {
+		if t.After(maxTime) {
+			maxTime = t
+		}
+		if t.Before(minTime) {
+			minTime = t
+		}
+	}
+
 	chain_condition := combineAndRemoveDuplicates("chain", chains)
 	hash_condition := combineAndRemoveDuplicates("transaction_hash", hashs)
 	owner_condition := combineAndRemoveDuplicates("owner", _owners)
 	event_type_condition := combineAndRemoveDuplicates("event_type", event_types)
 
-	conditions := []string{chain_condition, hash_condition, owner_condition, event_type_condition}
+	conditions := []string{owner_condition, hash_condition, chain_condition, event_type_condition}
 	combine_in_condition := strings.Join(conditions, " and ")
-	where_str := "where" + combine_in_condition
+	maxTime_str := maxTime.Format("2006-01-02 15:04:05")
+	minTime_str := minTime.Format("2006-01-02 15:04:05")
+	time_condition := " block_timestamp >= '" + minTime_str + "' and block_timestamp <= '" + maxTime_str + "' and "
+	combine_in_condition = time_condition + combine_in_condition
+	// where_str := " prewhere " + owner_condition + " where" + combine_in_condition + " and batch_transfer_index=0"
+	where_str := " prewhere " + owner_condition + " where" + combine_in_condition + " and batch_transfer_index=0"
 
 	str_sql_p := "select " +
 		"chain, " +
@@ -798,7 +821,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		"address_to," +
 		"owner," +
 		"sale_details " +
-		"from transfer_nft_filter_index "
+		"from transfer_nft_filter_index"
 
 	str_sql_p += where_str
 
