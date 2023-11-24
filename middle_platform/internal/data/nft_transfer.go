@@ -646,18 +646,25 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	str_where += "')"
 
 	if req.Network != "" {
+		networks := strings.Split(req.Network, ",")
+		networkCondition := combineAndRemoveDuplicates("chain", networks)
 
-		if req.Network == "binance_smart_chain" {
-
-			req.Network = "bsc"
-
-		}
-
-		if !strings.Contains(strings.ToLower(req.Network), "all") {
-			str_where += " and chain='" + req.Network + "'"
-		}
-
+		str_where = str_where + " and " + networkCondition
 	}
+
+	// if req.Network != "" {
+
+	// 	if req.Network == "binance_smart_chain" {
+
+	// 		req.Network = "bsc"
+
+	// 	}
+
+	// 	if !strings.Contains(strings.ToLower(req.Network), "all") {
+	// 		str_where += " and chain='" + req.Network + "'"
+	// 	}
+
+	// }
 
 	if req.Type != "" {
 
