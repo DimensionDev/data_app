@@ -737,7 +737,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	spam_filter_condition := " and collection_id not in (select collection_id from spam_collections_with_bucket ) "
 	//first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_new " + str_where + spam_filter_condition + group_by + str_order + str_limit
-	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from nft_transfer_summary " + str_where + spam_filter_condition + str_order + str_limit
+	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from nft_transfer_summary_selected_chains " + str_where + spam_filter_condition + str_order + str_limit
 	fmt.Println("first_q:", first_q)
 	first_res, err := r.data.data_query(first_q)
 	if err != nil {
@@ -822,7 +822,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		"address_to," +
 		"owner," +
 		"sale_details " +
-		"from transfer_nft_filter_index"
+		"from transfer_nft_filter_index_selected_chains"
 
 	str_sql_p += where_str
 
