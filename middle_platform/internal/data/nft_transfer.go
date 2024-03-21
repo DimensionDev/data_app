@@ -934,9 +934,19 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		action_ukey := strconv.FormatUint(uint64(action.index), 10)
 
 		if _, ok := data_nodes[node_ukey]; ok {
-			if _, ok := data_nodes[node_ukey].actios[action_ukey]; ok {
+			if data_nodes[node_ukey].timestamp != node.timestamp {
+				actions := data_nodes[node_ukey].actios
+				for old_action_ukey, exist_action := range actions {
+					if exist_action.token_id == action.token_id && data_nodes[node_ukey].timestamp < node.timestamp {
+						data_nodes[node_ukey].actios[old_action_ukey] = action
+					}
+				}
+
 			} else {
-				data_nodes[node_ukey].actios[action_ukey] = action
+				if _, ok := data_nodes[node_ukey].actios[action_ukey]; ok {
+				} else {
+					data_nodes[node_ukey].actios[action_ukey] = action
+				}
 			}
 		} else {
 			node.actios[action_ukey] = action
