@@ -65,6 +65,8 @@ type DataActionST struct {
 	index uint32
 
 	token_id string
+
+	contract_address string
 }
 
 type PaymentToken struct {
@@ -201,7 +203,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 				}
 			}
 
-			action.ContractAddress = nvalue.contract_address
+			action.ContractAddress = cvalue.contract_address
 			action.TokenId = cvalue.token_id
 			action.Tag = cvalue.tag
 			action.AddressTo = cvalue.address_to
@@ -926,6 +928,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		action.event_type = ts_log.event_type
 		action.index = ts_log.log_index
 		action.token_id = ts_log.token_id
+		action.contract_address =  ts_log.contract_address
 
 		if action.event_type == "sale" {
 			action.event_type = "trade"
@@ -1090,3 +1093,4 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 
 	return &result, nil
 }
+
