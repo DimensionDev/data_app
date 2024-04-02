@@ -908,7 +908,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 		node.actios = make(map[string]DataActionST)
 
-		node_ukey := node.network + node.hash + node.owner + node.event_type
+		node_ukey := node.network + node.hash + node.owner + node.event_type + ts_log.contract_address
 
 		var action DataActionST
 
@@ -928,7 +928,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		action.event_type = ts_log.event_type
 		action.index = ts_log.log_index
 		action.token_id = ts_log.token_id
-		action.contract_address =  ts_log.contract_address
+		action.contract_address = ts_log.contract_address
 
 		if action.event_type == "sale" {
 			action.event_type = "trade"
@@ -1093,4 +1093,3 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 
 	return &result, nil
 }
-
