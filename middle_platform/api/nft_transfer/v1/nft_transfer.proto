@@ -39,7 +39,30 @@ service NftTransfer {
 			body: "*"
 		};
 	};
+	rpc PostReportAccountMute (PostReportAccountMuteRequest) returns (PostReportAccountMuteReply){
+		option (google.api.http) = {
+			post: "/v1/nfts/mute",
+			body: "*"
+		};
+	};
 }
+message PostReportAccountMuteRequest {
+	string account_id = 1;
+	string collection_id = 2;
+}
+
+message AccountMuteReport {
+	string account_id = 1;
+	string collection_id = 2;
+	optional string created_at = 3;
+}
+
+message PostReportAccountMuteReply {
+	uint32 code = 1;
+	string message = 2;
+	AccountMuteReport data = 3;
+}
+
 message GetTransferNftRequest {
 	string contract_address = 1;
 	string event_type = 2;
