@@ -251,6 +251,61 @@ func containsString(collection []string, target string) bool {
 	return false // 如果遍历完仍未找到目标字符串，返回false
 }
 
+func (r *NftTransferRepo) PostNftMute(ctx context.Context, req *pb.PostReportAccountMuteRequest) (*pb.PostReportAccountMuteReply, error) {
+	collection_id := req.CollectionId
+	account_id := req.AccountId
+
+	// // 查找先前的 report 记录
+	// query_str := fmt.Sprintf("select created_at,deleted_at from account_collection_mute where account_id='%s' and collection_id = '%s'", account_id, collection_id)
+	// res, err := r.data.data_query_single(query_str)
+	// if err != nil {
+	// 	fmt.Println("post spam report fail", account_id, collection_id)
+	// 	return nil, err
+	// }
+
+	// type NftMute struct {
+	// 	create_at  time.Time
+	// 	deleted_at *time.Time
+	// }
+	// var rt NftMute
+
+	// if res != nil {
+	// 	if err := res.Scan(&rt.create_at, &rt.deleted_at); err != nil {
+	// 		fmt.Println(err.Error())
+	// 		if err.Error() == "sql: no rows in result set" {
+	// 			res = nil
+	// 		} else {
+	// 			fmt.Printf("error = %v", err)
+	// 			return nil, err
+	// 		}
+	// 	}
+	// }
+	const targetLayout = "2006-01-02T15:04:05Z"
+
+	create_at := time.Now().UTC().Format(targetLayout)
+	insert_str := fmt.Sprintf("insert into account_collection_mute values ('%s','%s','%s', NULL)", account_id, collection_id, create_at)
+	// fmt.Println(rt)
+	// if rt.create_at != time.Now() {
+	// 	insert_str = fmt.Sprintf("update account_collection_mute set deleted_at=NULL, created_at='%s' where account_id='%s' and collection_id='%s'", create_at, account_id, collection_id)
+
+	// }
+	insert_err := InsertIntoAccountCollectionMuteTable(r, insert_str)
+	if insert_err != nil {
+		return nil, insert_err
+	}
+	data := pb.AccountMuteReport{
+		AccountId:    account_id,
+		CollectionId: collection_id,
+		CreatedAt:    &create_at,
+	}
+	return &pb.PostReportAccountMuteReply{
+		Code:    200,
+		Message: "",
+		Data:    &data,
+	}, nil
+
+}
+
 func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReportSpamRequest) (*pb.PostReportSpamReply, error) {
 	//判断状态
 	collection_id := req.CollectionId
@@ -431,6 +486,15 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 }
 
 func InsertIntoSpamReportTable(r *NftTransferRepo, insert_str string) error {
+	fmt.Println("insert str:", insert_str)
+	_, err := r.data.data_query(insert_str)
+	if err != nil {
+		return fmt.Errorf("writing data into bytehouse error:%s", err)
+	}
+	return nil
+}
+
+func InsertIntoAccountCollectionMuteTable(r *NftTransferRepo, insert_str string) error {
 	fmt.Println("insert str:", insert_str)
 	_, err := r.data.data_query(insert_str)
 	if err != nil {
@@ -646,6 +710,11 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	}
 
 	str_where += "')"
+
+	if req.AccountId != nil {
+		account_id := *req.AccountId
+		str_where += fmt.Sprintf(" and collection_id not in (select collection_id from account_collection_mute where account_id='%s' and deleted_at is not NULL) ", account_id)
+	}
 
 	// if req.Network != "" {
 
