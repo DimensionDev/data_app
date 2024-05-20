@@ -49,3 +49,8 @@ func (s *NftTransferService) GetTransferNft(ctx context.Context, req *pb.GetTran
 	res, err := s.uc.GetTransferNft(ctx, req)
 	return res, err
 }
+
+func (s *NftTransferService) PostReportAccountMute(ctx context.Context, req *pb.PostReportAccountMuteRequest) (*pb.PostReportAccountMuteReply, error) {
+	res, err := s.uc.PostNftMute(ctx, req)
+	return res, err
+}

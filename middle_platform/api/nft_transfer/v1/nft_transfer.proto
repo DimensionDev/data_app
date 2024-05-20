@@ -139,6 +139,7 @@ message GetNftTransferRequest {
 	string order_direction=5;
 	uint64 limit=6;
 	uint64 cursor=7;
+	optional string account_id=8;
 }
 
 message GetNftTransferReply {
