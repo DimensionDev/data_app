@@ -713,7 +713,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	if req.AccountId != nil {
 		account_id := *req.AccountId
-		str_where += fmt.Sprintf(" and collection_id not in (select collection_id from account_collection_mute where account_id='%s' and deleted_at is not NULL) ", account_id)
+		str_where += fmt.Sprintf(" and collection_id not in (select collection_id from account_collection_mute where account_id='%s' and deleted_at is NULL) ", account_id)
 	}
 
 	// if req.Network != "" {
