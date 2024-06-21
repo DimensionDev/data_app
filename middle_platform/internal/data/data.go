@@ -107,9 +107,12 @@ func (r *Data) data_query(str_sql string) (*sql.Rows, error) {
 
 	start_time := time.Now().UnixMilli()
 	rows, qerr := r.DataBaseCli.QueryContext(queryCtx, str_sql)
+	if qerr != nil {
+		fmt.Println("qerr:", qerr, query_id)
+	}
 	end_time := time.Now().UnixMilli()
 	use_time := fmt.Sprintf("query duration: %d(ms)", end_time-start_time)
-	fmt.Println(use_time)
+	fmt.Println(use_time, query_id)
 
 	return rows, qerr
 }

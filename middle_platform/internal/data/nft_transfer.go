@@ -487,19 +487,21 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 
 func InsertIntoSpamReportTable(r *NftTransferRepo, insert_str string) error {
 	fmt.Println("insert str:", insert_str)
-	_, err := r.data.data_query(insert_str)
+	res, err := r.data.data_query(insert_str)
 	if err != nil {
 		return fmt.Errorf("writing data into bytehouse error:%s", err)
 	}
+	defer res.Close()
 	return nil
 }
 
 func InsertIntoAccountCollectionMuteTable(r *NftTransferRepo, insert_str string) error {
 	fmt.Println("insert str:", insert_str)
-	_, err := r.data.data_query(insert_str)
+	res, err := r.data.data_query(insert_str)
 	if err != nil {
 		return fmt.Errorf("writing data into bytehouse error:%s", err)
 	}
+	defer res.Close()
 	return nil
 }
 
@@ -508,10 +510,11 @@ func UpdataCollectionSpamScore(r *NftTransferRepo, collection_id string) error {
 	// update_str := fmt.Sprintf("update collections_new_test set spam_score=100 where collection_id='%s'", collection_id)
 	// update_str := fmt.Sprintf("insert into collections (collection_id,spam_score) values ('%s', 100)", "collection_id")
 	fmt.Println("update_str:", update_str)
-	_, err := r.data.data_query(update_str)
+	res, err := r.data.data_query(update_str)
 	if err != nil {
 		return fmt.Errorf("writing data into bytehouse error:%s", err)
 	}
+	defer res.Close()
 	return nil
 }
 
@@ -611,7 +614,7 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 			Data: nil,
 		}, err
 	}
-
+	defer res.Close()
 	var report_list []*pb.SpamReport
 
 	// row := make([]interface{}, 0)
@@ -728,7 +731,11 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 			networks := strings.Split(req.Network, ",")
 			networkCondition := combineAndRemoveDuplicates("chain", networks)
 			str_where = str_where + " and " + networkCondition
+		} else {
+			str_where = makeAllNetworksCondition(str_where)
 		}
+	} else {
+		str_where = makeAllNetworksCondition(str_where)
 	}
 
 	if req.Type != "" {
@@ -906,6 +913,8 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	}
 
+	defer log_rows.Close()
+
 	type transaction_log struct {
 		chain                 string
 		transaction_initiator string
@@ -1030,6 +1039,13 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		return nil, action_num, nil
 	}
 	return data_nodes, action_num, nil
+}
+
+func makeAllNetworksCondition(str_where string) string {
+	networks := strings.Split("ethereum,polygon,arbitrum,arbitrum-nova,avalanche,base,bsc,linea,optimism,polygon-zkevm,scroll,zksync-era,zora,gnosis", ",")
+	networkCondition := combineAndRemoveDuplicates("chain", networks)
+	str_where = str_where + " and " + networkCondition
+	return str_where
 }
 
 func combineAndRemoveDuplicates(field string, strArr []string) string {
