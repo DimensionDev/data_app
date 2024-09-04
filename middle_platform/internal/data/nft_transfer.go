@@ -100,7 +100,7 @@ type transaction struct {
 	transaction_hash string
 	owner            string
 	event_type       string
-	block_timestamp  time.Time
+	block_timestamp  []uint8
 }
 
 const ZERO_ADDRESS string = "0x0000000000000000000000000000000000000000"
@@ -629,7 +629,7 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	var rt report
 	for res.Next() {
 		if err := res.Scan(&rt.collection_id, &rt.status, &rt.created_at, &rt.update_at, &rt.source); err != nil {
-			log.Error("failed to scan row err = %v", err)
+			log.Error("failed to scan row err = ", err)
 			return nil, err
 		}
 		var spam_report pb.SpamReport
@@ -677,7 +677,7 @@ func (r *NftTransferRepo) GetTotalNumberOfSpamReport(query_str string) (uint64, 
 	} else {
 		var count uint64
 		if err := res.Scan(&count); err != nil {
-			log.Error("failed to scan row err = %v", err)
+			log.Error("failed to scan row err = ", err)
 			return 0, err
 		}
 		return count, nil
@@ -842,7 +842,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 			&ts.owner,
 			&ts.event_type,
 			&ts.block_timestamp); err != nil {
-			log.Error("failed to scan row err = %v", err)
+			log.Error("failed to scan row err = ", err)
 			return nil, 0, err
 		}
 		action_num += 1
@@ -850,7 +850,11 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		hashs = append(hashs, ts.transaction_hash)
 		_owners = append(_owners, ts.owner)
 		event_types = append(event_types, ts.event_type)
-		timestamps = append(timestamps, ts.block_timestamp)
+		t, err := time.Parse(time.DateTime, string(ts.block_timestamp))
+		if err != nil {
+			fmt.Println("Error parsing time:", err)
+		}
+		timestamps = append(timestamps, t)
 		dups := []string{ts.chain, ts.transaction_hash, ts.owner, ts.event_type}
 		dup_string := strings.Join(dups, "_")
 		dup_keys[dup_string] = true
@@ -885,7 +889,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	time_condition := " block_timestamp >= '" + minTime_str + "' and block_timestamp <= '" + maxTime_str + "' and "
 	combine_in_condition = time_condition + combine_in_condition
 	// where_str := " prewhere " + owner_condition + " where" + combine_in_condition + " and batch_transfer_index=0"
-	where_str := " prewhere " + owner_condition + " where" + combine_in_condition + " and batch_transfer_index=0"
+	where_str := " where" + combine_in_condition + " and batch_transfer_index=0"
 
 	str_sql_p := "select " +
 		"chain, " +
@@ -919,7 +923,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		chain                 string
 		transaction_initiator string
 		transaction_hash      string
-		block_timestamp       time.Time
+		block_timestamp       []uint8
 		event_type            string
 		log_index             uint32
 		contract_address      string
@@ -949,7 +953,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 			&ts_log.address_to,
 			&ts_log.owner,
 			&ts_log.sale_details); err != nil {
-			log.Error("failed to scan row err = %v", err)
+			log.Error("failed to scan row err = ", err)
 			return nil, 0, err
 		}
 
@@ -971,7 +975,11 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		node.hash = ts_log.transaction_hash
 
 		const targetLayout = "2006-01-02T15:04:05Z"
-		node.timestamp = ts_log.block_timestamp.Format(targetLayout)
+		t, err := time.Parse(time.DateTime, string(ts_log.block_timestamp))
+		if err != nil {
+			fmt.Println("Error parsing time:", err)
+		}
+		node.timestamp = t.Format(targetLayout)
 		node.event_type = ts_log.event_type
 		node.contract_address = ts_log.contract_address
 		node.owner = ts_log.owner
@@ -1140,7 +1148,7 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 
 		var transferNft pb.TransferNft
 		if err := res.Scan(&tf.nft_id, &tf.chain, &tf.contract_address, &tf.token_id, &tf.collection_id, &tf.event_type, &tf.address_from, &tf.address_to, &tf.block_timestamp, &tf.owner); err != nil {
-			log.Error("failed to scan row err = %v", err)
+			log.Error("failed to scan row err = ", err)
 			return &pb.GetTransferNftReply{
 				Code: 500,
 				Data: nil,
