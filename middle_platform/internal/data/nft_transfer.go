@@ -817,8 +817,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	var hashs []string
 	var _owners []string
 	var event_types []string
-	var dup_keys map[string]bool
-	dup_keys = make(map[string]bool)
+	dup_keys := make(map[string]bool)
 	var action_num uint64 = 0
 	var timestamps []time.Time
 
@@ -869,29 +868,34 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	owner_condition := combineAndRemoveDuplicates("owner", _owners)
 	event_type_condition := combineAndRemoveDuplicates("event_type", event_types)
 
-	conditions := []string{owner_condition, hash_condition, chain_condition, event_type_condition}
-	combine_in_condition := strings.Join(conditions, " and ")
-	maxTime_str := maxTime.Format("2006-01-02 15:04:05")
-	minTime_str := minTime.Format("2006-01-02 15:04:05")
-	time_condition := " block_timestamp >= '" + minTime_str + "' and block_timestamp <= '" + maxTime_str + "' and "
-	combine_in_condition = time_condition + combine_in_condition
-	// where_str := " prewhere " + owner_condition + " where" + combine_in_condition + " and batch_transfer_index=0"
-	where_str := " where" + combine_in_condition + " and batch_transfer_index=0"
+	var sb strings.Builder
+	sb.WriteString(" where block_timestamp >= '")
+	sb.WriteString(minTime.Format("2006-01-02 15:04:05"))
+	sb.WriteString("' and block_timestamp <= '")
+	sb.WriteString(maxTime.Format("2006-01-02 15:04:05"))
+	sb.WriteString("' and ")
 
-	str_sql_p := "select " +
-		"chain, " +
-		"transaction_initiator," +
-		"transaction_hash," +
-		"block_timestamp," +
-		"event_type," +
-		"log_index," +
-		"contract_address," +
-		"token_id," +
-		"address_from," +
-		"address_to," +
-		"owner," +
-		"sale_details " +
-		"from transfer_nft_filter_index_selected_chains"
+	conditions := []string{owner_condition, hash_condition, chain_condition, event_type_condition}
+	sb.WriteString(strings.Join(conditions, " and "))
+
+	sb.WriteString(" and batch_transfer_index=0")
+
+	where_str := sb.String()
+
+	str_sql_p := `select 
+		chain, 
+		transaction_initiator,
+		transaction_hash,
+		block_timestamp,
+		event_type,
+		log_index,
+		contract_address,
+		token_id,
+		address_from,
+		address_to,
+		owner,
+		sale_details 
+		from transfer_nft_filter_index_selected_chains`
 
 	str_sql_p += where_str
 
@@ -921,9 +925,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		sale_details          *string
 	}
 
-	var data_nodes map[string]NftTransfertmpSt
-
-	data_nodes = make(map[string]NftTransfertmpSt)
+	data_nodes := make(map[string]NftTransfertmpSt, limit_n)
 
 	for log_rows.Next() {
 		var ts_log transaction_log
@@ -939,8 +941,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 			&ts_log.address_from,
 			&ts_log.address_to,
 			&ts_log.owner,
-			&ts_log.sale_details); err != nil {
-			log.Error("failed to scan row err = ", err)
+			&ts_log.sale_details,
+		); err != nil {
+			log.Error("扫描行失败，错误 = ", err)
 			return nil, 0, err
 		}
 
