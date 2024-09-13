@@ -255,40 +255,10 @@ func (r *NftTransferRepo) PostNftMute(ctx context.Context, req *pb.PostReportAcc
 	collection_id := req.CollectionId
 	account_id := req.AccountId
 
-	// // 查找先前的 report 记录
-	// query_str := fmt.Sprintf("select created_at,deleted_at from account_collection_mute where account_id='%s' and collection_id = '%s'", account_id, collection_id)
-	// res, err := r.data.data_query_single(query_str)
-	// if err != nil {
-	// 	fmt.Println("post spam report fail", account_id, collection_id)
-	// 	return nil, err
-	// }
+	// const targetLayout = "2006-01-02T15:04:05Z"
 
-	// type NftMute struct {
-	// 	create_at  time.Time
-	// 	deleted_at *time.Time
-	// }
-	// var rt NftMute
-
-	// if res != nil {
-	// 	if err := res.Scan(&rt.create_at, &rt.deleted_at); err != nil {
-	// 		fmt.Println(err.Error())
-	// 		if err.Error() == "sql: no rows in result set" {
-	// 			res = nil
-	// 		} else {
-	// 			fmt.Printf("error = %v", err)
-	// 			return nil, err
-	// 		}
-	// 	}
-	// }
-	const targetLayout = "2006-01-02T15:04:05Z"
-
-	create_at := time.Now().UTC().Format(targetLayout)
+	create_at := time.Now().UTC().Format(time.DateTime)
 	insert_str := fmt.Sprintf("insert into account_collection_mute values ('%s','%s','%s', NULL)", account_id, collection_id, create_at)
-	// fmt.Println(rt)
-	// if rt.create_at != time.Now() {
-	// 	insert_str = fmt.Sprintf("update account_collection_mute set deleted_at=NULL, created_at='%s' where account_id='%s' and collection_id='%s'", create_at, account_id, collection_id)
-
-	// }
 	insert_err := InsertIntoAccountCollectionMuteTable(r, insert_str)
 	if insert_err != nil {
 		return nil, insert_err
@@ -323,7 +293,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 
 	type report struct {
 		status    string
-		create_at time.Time
+		create_at []uint8
 		source    string
 	}
 	var rt report
@@ -344,6 +314,11 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 	// if !ok {
 	// 	row = nil
 	// }
+	create_at, err := time.Parse(time.DateTime, string(rt.create_at))
+	if err != nil {
+		fmt.Println("解析时间时出错:", err)
+		return nil, fmt.Errorf("解析时间时出错: %w", err)
+	}
 
 	const targetLayout = "2006-01-02T15:04:05Z"
 	if next_status == "reporting" {
@@ -361,9 +336,9 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 		// 检查 collection 是否已经被report
 		if res != nil {
 			if rt.status == next_status || rt.status == "rejected" {
-				create_at := rt.create_at.Format(targetLayout)
+				create_at_str := create_at.Format(targetLayout)
 				update_at := time.Now().UTC().Format(targetLayout)
-				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at, update_at, rt.source)
+				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at_str, update_at, rt.source)
 				insert_err := InsertIntoSpamReportTable(r, insert_str)
 				if insert_err != nil {
 					return nil, insert_err
@@ -371,7 +346,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 				data := pb.SpamReport{
 					CollectionId: collection_id,
 					Status:       next_status,
-					CreateAt:     &create_at,
+					CreateAt:     &create_at_str,
 					UpdateAt:     &update_at,
 					Source:       &source,
 				}
@@ -413,7 +388,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 			fmt.Println(res)
 			if rt.status == "reporting" {
 				update_at := time.Now().UTC().Format(targetLayout)
-				create_at := rt.create_at.Format(targetLayout)
+				create_at_str := create_at.Format(targetLayout)
 
 				// 更新 collection 的 spam_score
 				if next_status == "approved" {
@@ -436,7 +411,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 				}
 
 				reply_source := rt.source
-				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at, update_at, reply_source)
+				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s')", collection_id, next_status, create_at_str, update_at, reply_source)
 				insert_err := InsertIntoSpamReportTable(r, insert_str)
 				if insert_err != nil {
 					return &pb.PostReportSpamReply{
@@ -450,7 +425,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 				data := pb.SpamReport{
 					CollectionId: collection_id,
 					Status:       next_status,
-					CreateAt:     &create_at,
+					CreateAt:     &create_at_str,
 					UpdateAt:     &update_at,
 					Source:       &reply_source,
 				}
@@ -499,7 +474,7 @@ func InsertIntoAccountCollectionMuteTable(r *NftTransferRepo, insert_str string)
 	fmt.Println("insert str:", insert_str)
 	res, err := r.data.data_query(insert_str)
 	if err != nil {
-		return fmt.Errorf("writing data into bytehouse error:%s", err)
+		return fmt.Errorf("writing data into starRocks error:%s", err)
 	}
 	defer res.Close()
 	return nil
@@ -622,8 +597,8 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	type report struct {
 		collection_id string
 		status        string
-		created_at    time.Time
-		update_at     time.Time
+		created_at    []uint8
+		update_at     []uint8
 		source        string
 	}
 	var rt report
@@ -637,9 +612,21 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		var update_at string
 		spam_report.CollectionId = rt.collection_id
 		spam_report.Status = rt.status
-		create_at = rt.created_at.Format(targetLayout)
+		parsedTime, err := time.Parse(time.DateTime, string(rt.created_at))
+		if err != nil {
+			log.Error("无法解析创建时间:", err)
+			create_at = ""
+		} else {
+			create_at = parsedTime.Format(targetLayout)
+		}
 		spam_report.CreateAt = &create_at
-		update_at = rt.update_at.Format(targetLayout)
+		parsedUpdateTime, err := time.Parse(time.DateTime, string(rt.update_at))
+		if err != nil {
+			log.Error("无法解析更新时间:", err)
+			update_at = ""
+		} else {
+			update_at = parsedUpdateTime.Format(targetLayout)
+		}
 		spam_report.UpdateAt = &update_at
 		reply_source := rt.source
 		spam_report.Source = &reply_source
@@ -1106,7 +1093,7 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 		limit = req.Limit
 	}
 	query := fmt.Sprintf(
-		"select nft_id,chain,contract_address,token_id,collection_id,event_type,address_from,address_to,block_timestamp,owner from transfer_nft %s order by create_time desc limit %d,%d",
+		"select distinct nft_id,chain,contract_address,token_id,collection_id,event_type,address_from,address_to,block_timestamp,owner from transfer_nft %s order by block_timestamp desc limit %d,%d",
 		whereCondition, (page-1)*limit, limit)
 	fmt.Println("query:", query)
 	totalQuery := fmt.Sprintf("select count(1) from transfer_nft %s", whereCondition)
@@ -1136,7 +1123,7 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 		event_type       string
 		address_from     *string
 		address_to       *string
-		block_timestamp  time.Time
+		block_timestamp  []uint8
 		owner            string
 	}
 	var tf transfer
@@ -1171,8 +1158,12 @@ func (r *NftTransferRepo) GetTransferNft(ctx context.Context, req *pb.GetTransfe
 		} else {
 			transferNft.AddressTo = *tf.address_to
 		}
-
-		transferNft.BlockTimestamp = tf.block_timestamp.Format("2006-01-02T15:04:05Z")
+		block_timestamp, err := time.Parse(time.DateTime, string(tf.block_timestamp))
+		if err != nil {
+			fmt.Println("解析时间时出错:", err)
+			return nil, fmt.Errorf("解析时间时出错: %w", err)
+		}
+		transferNft.BlockTimestamp = block_timestamp.Format("2006-01-02T15:04:05Z")
 		transferNft.Owner = tf.owner
 		transferNftList = append(transferNftList, &transferNft)
 	}
