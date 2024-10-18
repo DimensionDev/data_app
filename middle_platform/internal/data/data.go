@@ -100,7 +100,6 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sql.DB, error) {
 }
 
 func (r *Data) data_query(str_sql string) (*sql.Rows, error) {
-	//设置查询ID,重复的查询ID将被拒绝
 	query_id := fmt.Sprintf("firefly-%v", uuid.New().String())
 	fmt.Println("查询ID:", query_id)
 	queryCtx := context.WithValue(context.Background(), queryIDKey, query_id)
@@ -110,11 +109,13 @@ func (r *Data) data_query(str_sql string) (*sql.Rows, error) {
 	// 	log.Error("query_id %v failed to add query setting err = %v", query_id, err)
 	// 	return nil, err
 	// }
-
-	if err := r.DataBaseCli.Ping(); err != nil {
-		log.Error("failed to ping", err)
-		return nil, err
-	}
+	// prepare_start_time := time.Now().UnixMilli()
+	// if err := r.DataBaseCli.Ping(); err != nil {
+	// 	log.Error("failed to ping", err)
+	// 	return nil, err
+	// }
+	// prepare_end_time := time.Now().UnixMilli()
+	// fmt.Println("prepare_duration:", prepare_end_time-prepare_start_time)
 
 	start_time := time.Now().UnixMilli()
 	rows, qerr := r.DataBaseCli.QueryContext(queryCtx, str_sql)

@@ -184,7 +184,7 @@ func (r *NftTransferRepo) GetHandleNftinfo(ctx context.Context, req *pb.GetNftTr
 
 			var action pb.ActionStArr
 			var sale_info SaleInfo
-			if &nvalue.sale_details != nil && nvalue.sale_details != "" {
+			if nvalue.sale_details != "" {
 				err := json.Unmarshal([]byte(nvalue.sale_details), &sale_info)
 
 				if err != nil {
@@ -672,6 +672,24 @@ func (r *NftTransferRepo) GetTotalNumberOfSpamReport(query_str string) (uint64, 
 }
 
 func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) (map[string]NftTransfertmpSt, uint64, error) {
+	// 创建一个切片来存储每个操作的耗时
+	timings := make([]struct {
+		operation string
+		duration  time.Duration
+	}, 0)
+
+	// 定义一个辅助函数来记录时间
+	timeTrack := func(start time.Time, name string) {
+		elapsed := time.Since(start)
+		timings = append(timings, struct {
+			operation string
+			duration  time.Duration
+		}{name, elapsed})
+	}
+
+	// 主要逻辑开始
+	startTime := time.Now()
+	defer timeTrack(startTime, "Total execution")
 
 	//nftlist := make([]*pb.PnftTransferSt, 5, 5)
 	if req.Address == "" {
@@ -800,11 +818,13 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	//spam_filter_condition := " and collection_id not in  " + collection_sub_query
 	// first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_index " + str_where + spam_filter_condition + group_by + str_order + str_limit
 
-	spam_filter_condition := " and collection_id not in (select collection_id from spam_collections_with_bucket ) "
+	spam_filter_condition := " AND NOT EXISTS (SELECT 1 FROM spam_collections_with_bucket sp WHERE nft_transfer_summary_selected_chains.collection_id = sp.collection_id)"
 	//first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from transfer_nft_filter_new " + str_where + spam_filter_condition + group_by + str_order + str_limit
-	first_q := "select chain,transaction_hash,owner,event_type,block_timestamp from nft_transfer_summary_selected_chains " + str_where + spam_filter_condition + str_order + str_limit
-	fmt.Println("first_q:", first_q)
+	first_q := "SELECT chain, transaction_hash, owner, event_type, block_timestamp FROM nft_transfer_summary_selected_chains " + str_where + spam_filter_condition + str_order + str_limit
+	// fmt.Println("first_q:", first_q)
+	query_first_start := time.Now()
 	first_res, err := r.data.data_query(first_q)
+	timeTrack(query_first_start, "Query first result")
 	if err != nil {
 		return nil, 0, err
 	}
@@ -899,7 +919,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	str_sql_p += where_str
 
-	fmt.Println("str_sql:", str_sql_p)
+	// fmt.Println("str_sql:", str_sql_p)
 
 	log_rows, err := r.data.data_query(str_sql_p)
 
@@ -910,6 +930,7 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	defer log_rows.Close()
 
+	processSecondResultStart := time.Now()
 	type transaction_log struct {
 		chain                 string
 		transaction_initiator string
@@ -1036,6 +1057,18 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	if len(data_nodes) == 0 {
 		return nil, action_num, nil
 	}
+	timeTrack(processSecondResultStart, "Process second query result")
+
+	// 在函数返回之前，打印并排序耗时信息
+	sort.Slice(timings, func(i, j int) bool {
+		return timings[i].duration > timings[j].duration
+	})
+
+	fmt.Println("Operation timings (sorted by duration):")
+	for _, timing := range timings {
+		fmt.Printf("%s: %v\n", timing.operation, timing.duration)
+	}
+
 	return data_nodes, action_num, nil
 }
 
