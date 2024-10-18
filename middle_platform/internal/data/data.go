@@ -101,7 +101,7 @@ func NewDataBase(c *conf.Data, logger log.Logger) (*sql.DB, error) {
 
 func (r *Data) data_query(str_sql string) (*sql.Rows, error) {
 	query_id := fmt.Sprintf("firefly-%v", uuid.New().String())
-	fmt.Println("查询ID:", query_id)
+	// fmt.Println("查询ID:", query_id)
 	queryCtx := context.WithValue(context.Background(), queryIDKey, query_id)
 	// queryCtx = context.WithValue(queryCtx, "query_id", query_id)
 	// queryCtx.Value("query_id")
@@ -117,14 +117,14 @@ func (r *Data) data_query(str_sql string) (*sql.Rows, error) {
 	// prepare_end_time := time.Now().UnixMilli()
 	// fmt.Println("prepare_duration:", prepare_end_time-prepare_start_time)
 
-	start_time := time.Now().UnixMilli()
+	// start_time := time.Now().UnixMilli()
 	rows, qerr := r.DataBaseCli.QueryContext(queryCtx, str_sql)
 	if qerr != nil {
 		fmt.Println("qerr:", qerr, query_id)
 	}
-	end_time := time.Now().UnixMilli()
-	use_time := fmt.Sprintf("query duration: %d(ms)", end_time-start_time)
-	fmt.Println(use_time, query_id)
+	// end_time := time.Now().UnixMilli()
+	// use_time := fmt.Sprintf("query duration: %d(ms)", end_time-start_time)
+	// fmt.Println(use_time, query_id)
 
 	return rows, qerr
 }

@@ -921,7 +921,9 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	// fmt.Println("str_sql:", str_sql_p)
 
+	processSecondResultStart := time.Now()
 	log_rows, err := r.data.data_query(str_sql_p)
+	timeTrack(processSecondResultStart, "Process second query result")
 
 	if err != nil {
 		return nil, 0, err
@@ -930,7 +932,6 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 
 	defer log_rows.Close()
 
-	processSecondResultStart := time.Now()
 	type transaction_log struct {
 		chain                 string
 		transaction_initiator string
@@ -1057,7 +1058,6 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 	if len(data_nodes) == 0 {
 		return nil, action_num, nil
 	}
-	timeTrack(processSecondResultStart, "Process second query result")
 
 	// 在函数返回之前，打印并排序耗时信息
 	sort.Slice(timings, func(i, j int) bool {
