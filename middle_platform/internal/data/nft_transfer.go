@@ -314,11 +314,6 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 	// if !ok {
 	// 	row = nil
 	// }
-	create_at, err := time.Parse(time.DateTime, string(rt.create_at))
-	if err != nil {
-		fmt.Println("解析时间时出错:", err)
-		return nil, fmt.Errorf("解析时间时出错: %w", err)
-	}
 
 	const targetLayout = "2006-01-02T15:04:05Z"
 	if next_status == "reporting" {
@@ -335,6 +330,11 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 		}
 		// 检查 collection 是否已经被report
 		if res != nil {
+			create_at, err := time.Parse(time.DateTime, string(rt.create_at))
+			if err != nil {
+				fmt.Println("解析时间时出错:", err)
+				return nil, fmt.Errorf("解析时间时出错: %w", err)
+			}
 			if rt.status == next_status || rt.status == "rejected" {
 				create_at_str := create_at.Format(targetLayout)
 				update_at := time.Now().UTC().Format(targetLayout)
@@ -385,6 +385,11 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 		}
 	} else if next_status == "approved" || next_status == "rejected" {
 		if res != nil {
+			create_at, err := time.Parse(time.DateTime, string(rt.create_at))
+			if err != nil {
+				fmt.Println("解析时间时出错:", err)
+				return nil, fmt.Errorf("解析时间时出错: %w", err)
+			}
 			fmt.Println(res)
 			if rt.status == "reporting" {
 				update_at := time.Now().UTC().Format(targetLayout)
