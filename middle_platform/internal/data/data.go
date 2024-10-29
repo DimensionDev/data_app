@@ -130,26 +130,8 @@ func (r *Data) data_query(str_sql string) (*sql.Rows, error) {
 }
 
 func (r *Data) data_query_single(str_sql string) (*sql.Row, error) {
-	// queryCtx := bytehouse.NewQueryContext(context.Background())
-	//set the query ID here, duplicate query IDs will be rejected
-	query_id := fmt.Sprintf("firefly-%v", uuid.New().String())
-	fmt.Println("query ID:", query_id)
-	queryCtx := context.WithValue(context.Background(), queryIDKey, query_id)
-	// if err := queryCtx.AddQuerySetting("max_block_size", "2000"); err != nil {
-	// 	log.Error("query_id %v failed to add query setting err = %v", query_id, err)
-	// 	return nil, err
-	// }
 
-	if err := r.DataBaseCli.Ping(); err != nil {
-		log.Error("failed to ping", err)
-		return nil, err
-	}
-
-	start_time := time.Now().UnixMilli()
-	row := r.DataBaseCli.QueryRowContext(queryCtx, str_sql)
-	end_time := time.Now().UnixMilli()
-	use_time := fmt.Sprintf("query duration: %d(ms)", end_time-start_time)
-	fmt.Println(use_time)
+	row := r.DataBaseCli.QueryRowContext(context.Background(), str_sql)
 
 	return row, nil
 }

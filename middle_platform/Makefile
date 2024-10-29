@@ -15,6 +15,8 @@ else
 	API_PROTO_FILES=$(shell find api -name *.proto)
 endif
 
+GO_FILES := $(shell find . -name '*.go')
+
 .PHONY: init
 # init env
 init:
@@ -46,7 +48,7 @@ api:
 
 .PHONY: build
 # build
-build:
+build: $(GO_FILES) generate
 	mkdir -p bin/ && go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/ ./...
 
 .PHONY: generate
