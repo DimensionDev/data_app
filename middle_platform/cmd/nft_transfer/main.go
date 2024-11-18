@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"middle_platform/internal/conf"
@@ -13,6 +14,7 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	"github.com/joho/godotenv"
 
 	_ "go.uber.org/automaxprocs"
 )
@@ -48,6 +50,10 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
 }
 
 func main() {
+	env_err := godotenv.Load()
+	if env_err != nil {
+		fmt.Println("Error loading .env file", env_err)
+	}
 	flag.Parse()
 	logger := log.With(log.NewStdLogger(os.Stdout),
 		"ts", log.DefaultTimestamp,
@@ -61,6 +67,7 @@ func main() {
 	c := config.New(
 		config.WithSource(
 			file.NewSource(flagconf),
+			// env.NewSource(""),
 		),
 	)
 	defer c.Close()
