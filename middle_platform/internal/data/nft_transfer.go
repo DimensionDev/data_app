@@ -337,7 +337,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 			source = "firefly"
 		} else {
 			source = *req_source
-			sources := []string{"firefly", "mask-network"}
+			sources := []string{"firefly", "mask-network", "web3bio"}
 			if !containsString(sources, source) {
 				fmt.Println("source:", source)
 				// return nil, errors.New(fmt.Sprintf("value of source field should be in %s", sources))
