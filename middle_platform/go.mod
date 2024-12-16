@@ -5,7 +5,6 @@ go 1.22
 toolchain go1.22.3
 
 require (
-	github.com/bytehouse-cloud/driver-go v1.17.4
 	github.com/envoyproxy/protoc-gen-validate v1.1.0
 	github.com/go-kratos/kratos/v2 v2.8.1
 	github.com/go-redis/redis/v8 v8.11.5
@@ -25,6 +24,7 @@ require (
 	dario.cat/mergo v1.0.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/google/subcommands v1.2.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	go.opentelemetry.io/otel/metric v1.31.0 // indirect
@@ -34,11 +34,7 @@ require (
 )
 
 require (
-	github.com/RoaringBitmap/roaring v1.9.4 // indirect
-	github.com/bits-and-blooms/bitset v1.14.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/dennwc/varint v1.0.0 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -49,16 +45,13 @@ require (
 	github.com/go-playground/form/v4 v4.2.1 // indirect
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gorilla/mux v1.8.1 // indirect
-	github.com/jfcg/sixb v1.4.1 // indirect
 	github.com/joho/godotenv v1.5.1
 	github.com/lufia/plan9stats v0.0.0-20240909124753-873cd0166683 // indirect
-	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/shirou/gopsutil/v3 v3.24.5 // indirect
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.9.0 // indirect
-	github.com/valyala/fastjson v1.6.4 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/otel v1.31.0 // indirect
 	go.opentelemetry.io/otel/trace v1.31.0 // indirect

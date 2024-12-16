@@ -9,8 +9,6 @@ import (
 
 	"fmt"
 
-	// "github.com/bytehouse-cloud/driver-go/sdk"
-
 	"github.com/go-kratos/kratos/v2/log"
 
 	pb "middle_platform/api/nft_transfer/v1"
@@ -485,7 +483,7 @@ func InsertIntoSpamReportTable(r *NftTransferRepo, insert_str string) error {
 	fmt.Println("insert str:", insert_str)
 	res, err := r.data.data_query(insert_str)
 	if err != nil {
-		return fmt.Errorf("writing data into bytehouse error:%s", err)
+		return fmt.Errorf("writing data into db error:%s", err)
 	}
 	defer res.Close()
 	return nil
@@ -508,7 +506,7 @@ func UpdataCollectionSpamScore(r *NftTransferRepo, collection_id string) error {
 	fmt.Println("update_str:", update_str)
 	res, err := r.data.data_query(update_str)
 	if err != nil {
-		return fmt.Errorf("writing data into bytehouse error:%s", err)
+		return fmt.Errorf("writing data into db error:%s", err)
 	}
 	defer res.Close()
 	return nil
@@ -604,7 +602,7 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	res, err := r.data.data_query(query_str)
 
 	if err != nil {
-		fmt.Println("query from bytehouse:", query_str)
+		fmt.Println("query from db error:", query_str)
 		return &pb.GetReportSpamReply{
 			Code: 500,
 			Data: nil,
@@ -680,8 +678,8 @@ func (r *NftTransferRepo) GetTotalNumberOfSpamReport(query_str string) (uint64, 
 	}
 	if res == nil {
 		// if !ok {
-		fmt.Println("query fail from bytehouse")
-		return uint64(0), errors.New("query fail from bytehouse")
+		fmt.Println("query fail from db")
+		return uint64(0), errors.New("query fail from db")
 	} else {
 		var count uint64
 		if err := res.Scan(&count); err != nil {
