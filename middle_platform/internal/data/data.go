@@ -9,12 +9,8 @@ import (
 	"github.com/google/uuid"
 
 	_ "github.com/go-sql-driver/mysql"
-	// "gorm.io/gorm/logger"
-
-	// "github.com/bytehouse-cloud/driver-go/sdk"
 	"time"
 
-	_ "github.com/bytehouse-cloud/driver-go/sql"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
