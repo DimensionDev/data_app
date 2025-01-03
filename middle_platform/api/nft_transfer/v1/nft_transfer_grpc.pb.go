@@ -19,11 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	NftTransfer_GetNftTransfer_FullMethodName        = "/api.nft_transfer.v1.NftTransfer/GetNftTransfer"
-	NftTransfer_GetReportSpam_FullMethodName         = "/api.nft_transfer.v1.NftTransfer/GetReportSpam"
-	NftTransfer_PostReportSpam_FullMethodName        = "/api.nft_transfer.v1.NftTransfer/PostReportSpam"
-	NftTransfer_GetTransferNft_FullMethodName        = "/api.nft_transfer.v1.NftTransfer/GetTransferNft"
-	NftTransfer_PostReportAccountMute_FullMethodName = "/api.nft_transfer.v1.NftTransfer/PostReportAccountMute"
+	NftTransfer_GetNftTransfer_FullMethodName            = "/api.nft_transfer.v1.NftTransfer/GetNftTransfer"
+	NftTransfer_GetReportSpam_FullMethodName             = "/api.nft_transfer.v1.NftTransfer/GetReportSpam"
+	NftTransfer_PostReportSpam_FullMethodName            = "/api.nft_transfer.v1.NftTransfer/PostReportSpam"
+	NftTransfer_GetTransferNft_FullMethodName            = "/api.nft_transfer.v1.NftTransfer/GetTransferNft"
+	NftTransfer_PostReportAccountMute_FullMethodName     = "/api.nft_transfer.v1.NftTransfer/PostReportAccountMute"
+	NftTransfer_AddWhitelistCollection_FullMethodName    = "/api.nft_transfer.v1.NftTransfer/AddWhitelistCollection"
+	NftTransfer_DeleteWhitelistCollection_FullMethodName = "/api.nft_transfer.v1.NftTransfer/DeleteWhitelistCollection"
+	NftTransfer_ListWhitelistCollections_FullMethodName  = "/api.nft_transfer.v1.NftTransfer/ListWhitelistCollections"
 )
 
 // NftTransferClient is the client API for NftTransfer service.
@@ -35,6 +38,9 @@ type NftTransferClient interface {
 	PostReportSpam(ctx context.Context, in *PostReportSpamRequest, opts ...grpc.CallOption) (*PostReportSpamReply, error)
 	GetTransferNft(ctx context.Context, in *GetTransferNftRequest, opts ...grpc.CallOption) (*GetTransferNftReply, error)
 	PostReportAccountMute(ctx context.Context, in *PostReportAccountMuteRequest, opts ...grpc.CallOption) (*PostReportAccountMuteReply, error)
+	AddWhitelistCollection(ctx context.Context, in *AddWhitelistCollectionRequest, opts ...grpc.CallOption) (*AddWhitelistCollectionReply, error)
+	DeleteWhitelistCollection(ctx context.Context, in *DeleteWhitelistCollectionRequest, opts ...grpc.CallOption) (*DeleteWhitelistCollectionReply, error)
+	ListWhitelistCollections(ctx context.Context, in *ListWhitelistCollectionsRequest, opts ...grpc.CallOption) (*ListWhitelistCollectionsReply, error)
 }
 
 type nftTransferClient struct {
@@ -90,6 +96,33 @@ func (c *nftTransferClient) PostReportAccountMute(ctx context.Context, in *PostR
 	return out, nil
 }
 
+func (c *nftTransferClient) AddWhitelistCollection(ctx context.Context, in *AddWhitelistCollectionRequest, opts ...grpc.CallOption) (*AddWhitelistCollectionReply, error) {
+	out := new(AddWhitelistCollectionReply)
+	err := c.cc.Invoke(ctx, NftTransfer_AddWhitelistCollection_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nftTransferClient) DeleteWhitelistCollection(ctx context.Context, in *DeleteWhitelistCollectionRequest, opts ...grpc.CallOption) (*DeleteWhitelistCollectionReply, error) {
+	out := new(DeleteWhitelistCollectionReply)
+	err := c.cc.Invoke(ctx, NftTransfer_DeleteWhitelistCollection_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nftTransferClient) ListWhitelistCollections(ctx context.Context, in *ListWhitelistCollectionsRequest, opts ...grpc.CallOption) (*ListWhitelistCollectionsReply, error) {
+	out := new(ListWhitelistCollectionsReply)
+	err := c.cc.Invoke(ctx, NftTransfer_ListWhitelistCollections_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NftTransferServer is the server API for NftTransfer service.
 // All implementations must embed UnimplementedNftTransferServer
 // for forward compatibility
@@ -99,6 +132,9 @@ type NftTransferServer interface {
 	PostReportSpam(context.Context, *PostReportSpamRequest) (*PostReportSpamReply, error)
 	GetTransferNft(context.Context, *GetTransferNftRequest) (*GetTransferNftReply, error)
 	PostReportAccountMute(context.Context, *PostReportAccountMuteRequest) (*PostReportAccountMuteReply, error)
+	AddWhitelistCollection(context.Context, *AddWhitelistCollectionRequest) (*AddWhitelistCollectionReply, error)
+	DeleteWhitelistCollection(context.Context, *DeleteWhitelistCollectionRequest) (*DeleteWhitelistCollectionReply, error)
+	ListWhitelistCollections(context.Context, *ListWhitelistCollectionsRequest) (*ListWhitelistCollectionsReply, error)
 	mustEmbedUnimplementedNftTransferServer()
 }
 
@@ -120,6 +156,15 @@ func (UnimplementedNftTransferServer) GetTransferNft(context.Context, *GetTransf
 }
 func (UnimplementedNftTransferServer) PostReportAccountMute(context.Context, *PostReportAccountMuteRequest) (*PostReportAccountMuteReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostReportAccountMute not implemented")
+}
+func (UnimplementedNftTransferServer) AddWhitelistCollection(context.Context, *AddWhitelistCollectionRequest) (*AddWhitelistCollectionReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddWhitelistCollection not implemented")
+}
+func (UnimplementedNftTransferServer) DeleteWhitelistCollection(context.Context, *DeleteWhitelistCollectionRequest) (*DeleteWhitelistCollectionReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteWhitelistCollection not implemented")
+}
+func (UnimplementedNftTransferServer) ListWhitelistCollections(context.Context, *ListWhitelistCollectionsRequest) (*ListWhitelistCollectionsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListWhitelistCollections not implemented")
 }
 func (UnimplementedNftTransferServer) mustEmbedUnimplementedNftTransferServer() {}
 
@@ -224,6 +269,60 @@ func _NftTransfer_PostReportAccountMute_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NftTransfer_AddWhitelistCollection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddWhitelistCollectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).AddWhitelistCollection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_AddWhitelistCollection_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).AddWhitelistCollection(ctx, req.(*AddWhitelistCollectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NftTransfer_DeleteWhitelistCollection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteWhitelistCollectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).DeleteWhitelistCollection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_DeleteWhitelistCollection_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).DeleteWhitelistCollection(ctx, req.(*DeleteWhitelistCollectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NftTransfer_ListWhitelistCollections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListWhitelistCollectionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).ListWhitelistCollections(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_ListWhitelistCollections_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).ListWhitelistCollections(ctx, req.(*ListWhitelistCollectionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NftTransfer_ServiceDesc is the grpc.ServiceDesc for NftTransfer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -250,6 +349,18 @@ var NftTransfer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PostReportAccountMute",
 			Handler:    _NftTransfer_PostReportAccountMute_Handler,
+		},
+		{
+			MethodName: "AddWhitelistCollection",
+			Handler:    _NftTransfer_AddWhitelistCollection_Handler,
+		},
+		{
+			MethodName: "DeleteWhitelistCollection",
+			Handler:    _NftTransfer_DeleteWhitelistCollection_Handler,
+		},
+		{
+			MethodName: "ListWhitelistCollections",
+			Handler:    _NftTransfer_ListWhitelistCollections_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

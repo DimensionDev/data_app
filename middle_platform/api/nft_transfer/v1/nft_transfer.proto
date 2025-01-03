@@ -45,6 +45,25 @@ service NftTransfer {
 			body: "*"
 		};
 	};
+
+	rpc AddWhitelistCollection (AddWhitelistCollectionRequest) returns (AddWhitelistCollectionReply) {
+		option (google.api.http) = {
+			post: "/v1/nfttransfer/whitelist/collection",
+			body: "*"
+		};
+	};
+
+	rpc DeleteWhitelistCollection (DeleteWhitelistCollectionRequest) returns (DeleteWhitelistCollectionReply) {
+		option (google.api.http) = {
+			delete: "/v1/nfttransfer/whitelist/collection/{collection_id}"
+		};
+	};
+
+	rpc ListWhitelistCollections (ListWhitelistCollectionsRequest) returns (ListWhitelistCollectionsReply) {
+		option (google.api.http) = {
+			get: "/v1/nfttransfer/whitelist/collections"
+		};
+	};
 }
 message PostReportAccountMuteRequest {
 	string account_id = 1;
@@ -180,4 +199,44 @@ message CostSt {
 	string symbol = 1;
 	string value = 2;
 	uint32 decimals = 3;
+}
+
+message WhitelistCollection {
+	string collection_id = 1;
+	string created_at = 2;
+	string updated_at = 3;
+	optional string description = 4;
+}
+
+message AddWhitelistCollectionRequest {
+	string collection_id = 1[(validate.rules).string.min_len = 1];
+	optional string description = 2;
+}
+
+message AddWhitelistCollectionReply {
+	uint32 code = 1;
+	string message = 2;
+	WhitelistCollection data = 3;
+}
+
+message DeleteWhitelistCollectionRequest {
+	string collection_id = 1[(validate.rules).string.min_len = 1];
+}
+
+message DeleteWhitelistCollectionReply {
+	uint32 code = 1;
+	string message = 2;
+}
+
+message ListWhitelistCollectionsRequest {
+	uint32 page = 1;
+	uint32 limit = 2[json_name = "page_size"];
+}
+
+message ListWhitelistCollectionsReply {
+	uint32 code = 1;
+	uint32 page = 2;
+	uint32 limit = 3[json_name = "page_size"];
+	uint64 total = 4;
+	repeated WhitelistCollection data = 5;
 }

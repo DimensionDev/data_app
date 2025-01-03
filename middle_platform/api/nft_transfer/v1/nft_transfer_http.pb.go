@@ -19,16 +19,22 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationNftTransferAddWhitelistCollection = "/api.nft_transfer.v1.NftTransfer/AddWhitelistCollection"
+const OperationNftTransferDeleteWhitelistCollection = "/api.nft_transfer.v1.NftTransfer/DeleteWhitelistCollection"
 const OperationNftTransferGetNftTransfer = "/api.nft_transfer.v1.NftTransfer/GetNftTransfer"
 const OperationNftTransferGetReportSpam = "/api.nft_transfer.v1.NftTransfer/GetReportSpam"
 const OperationNftTransferGetTransferNft = "/api.nft_transfer.v1.NftTransfer/GetTransferNft"
+const OperationNftTransferListWhitelistCollections = "/api.nft_transfer.v1.NftTransfer/ListWhitelistCollections"
 const OperationNftTransferPostReportAccountMute = "/api.nft_transfer.v1.NftTransfer/PostReportAccountMute"
 const OperationNftTransferPostReportSpam = "/api.nft_transfer.v1.NftTransfer/PostReportSpam"
 
 type NftTransferHTTPServer interface {
+	AddWhitelistCollection(context.Context, *AddWhitelistCollectionRequest) (*AddWhitelistCollectionReply, error)
+	DeleteWhitelistCollection(context.Context, *DeleteWhitelistCollectionRequest) (*DeleteWhitelistCollectionReply, error)
 	GetNftTransfer(context.Context, *GetNftTransferRequest) (*GetNftTransferReply, error)
 	GetReportSpam(context.Context, *GetReportSpamRequest) (*GetReportSpamReply, error)
 	GetTransferNft(context.Context, *GetTransferNftRequest) (*GetTransferNftReply, error)
+	ListWhitelistCollections(context.Context, *ListWhitelistCollectionsRequest) (*ListWhitelistCollectionsReply, error)
 	PostReportAccountMute(context.Context, *PostReportAccountMuteRequest) (*PostReportAccountMuteReply, error)
 	PostReportSpam(context.Context, *PostReportSpamRequest) (*PostReportSpamReply, error)
 }
@@ -41,6 +47,9 @@ func RegisterNftTransferHTTPServer(s *http.Server, srv NftTransferHTTPServer) {
 	r.POST("/v1/nfts/report/spam", _NftTransfer_PostReportSpam0_HTTP_Handler(srv))
 	r.POST("/v1/nfts/transfer", _NftTransfer_GetTransferNft0_HTTP_Handler(srv))
 	r.POST("/v1/nfts/mute", _NftTransfer_PostReportAccountMute0_HTTP_Handler(srv))
+	r.POST("/v1/nfttransfer/whitelist/collection", _NftTransfer_AddWhitelistCollection0_HTTP_Handler(srv))
+	r.DELETE("/v1/nfttransfer/whitelist/collection/{collection_id}", _NftTransfer_DeleteWhitelistCollection0_HTTP_Handler(srv))
+	r.GET("/v1/nfttransfer/whitelist/collections", _NftTransfer_ListWhitelistCollections0_HTTP_Handler(srv))
 }
 
 func _NftTransfer_GetNftTransfer0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
@@ -157,10 +166,73 @@ func _NftTransfer_PostReportAccountMute0_HTTP_Handler(srv NftTransferHTTPServer)
 	}
 }
 
+func _NftTransfer_AddWhitelistCollection0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in AddWhitelistCollectionRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNftTransferAddWhitelistCollection)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.AddWhitelistCollection(ctx, req.(*AddWhitelistCollectionRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*AddWhitelistCollectionReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _NftTransfer_DeleteWhitelistCollection0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in DeleteWhitelistCollectionRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNftTransferDeleteWhitelistCollection)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.DeleteWhitelistCollection(ctx, req.(*DeleteWhitelistCollectionRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*DeleteWhitelistCollectionReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _NftTransfer_ListWhitelistCollections0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListWhitelistCollectionsRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNftTransferListWhitelistCollections)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListWhitelistCollections(ctx, req.(*ListWhitelistCollectionsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListWhitelistCollectionsReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type NftTransferHTTPClient interface {
+	AddWhitelistCollection(ctx context.Context, req *AddWhitelistCollectionRequest, opts ...http.CallOption) (rsp *AddWhitelistCollectionReply, err error)
+	DeleteWhitelistCollection(ctx context.Context, req *DeleteWhitelistCollectionRequest, opts ...http.CallOption) (rsp *DeleteWhitelistCollectionReply, err error)
 	GetNftTransfer(ctx context.Context, req *GetNftTransferRequest, opts ...http.CallOption) (rsp *GetNftTransferReply, err error)
 	GetReportSpam(ctx context.Context, req *GetReportSpamRequest, opts ...http.CallOption) (rsp *GetReportSpamReply, err error)
 	GetTransferNft(ctx context.Context, req *GetTransferNftRequest, opts ...http.CallOption) (rsp *GetTransferNftReply, err error)
+	ListWhitelistCollections(ctx context.Context, req *ListWhitelistCollectionsRequest, opts ...http.CallOption) (rsp *ListWhitelistCollectionsReply, err error)
 	PostReportAccountMute(ctx context.Context, req *PostReportAccountMuteRequest, opts ...http.CallOption) (rsp *PostReportAccountMuteReply, err error)
 	PostReportSpam(ctx context.Context, req *PostReportSpamRequest, opts ...http.CallOption) (rsp *PostReportSpamReply, err error)
 }
@@ -171,6 +243,32 @@ type NftTransferHTTPClientImpl struct {
 
 func NewNftTransferHTTPClient(client *http.Client) NftTransferHTTPClient {
 	return &NftTransferHTTPClientImpl{client}
+}
+
+func (c *NftTransferHTTPClientImpl) AddWhitelistCollection(ctx context.Context, in *AddWhitelistCollectionRequest, opts ...http.CallOption) (*AddWhitelistCollectionReply, error) {
+	var out AddWhitelistCollectionReply
+	pattern := "/v1/nfttransfer/whitelist/collection"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationNftTransferAddWhitelistCollection))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *NftTransferHTTPClientImpl) DeleteWhitelistCollection(ctx context.Context, in *DeleteWhitelistCollectionRequest, opts ...http.CallOption) (*DeleteWhitelistCollectionReply, error) {
+	var out DeleteWhitelistCollectionReply
+	pattern := "/v1/nfttransfer/whitelist/collection/{collection_id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationNftTransferDeleteWhitelistCollection))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
 }
 
 func (c *NftTransferHTTPClientImpl) GetNftTransfer(ctx context.Context, in *GetNftTransferRequest, opts ...http.CallOption) (*GetNftTransferReply, error) {
@@ -206,6 +304,19 @@ func (c *NftTransferHTTPClientImpl) GetTransferNft(ctx context.Context, in *GetT
 	opts = append(opts, http.Operation(OperationNftTransferGetTransferNft))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *NftTransferHTTPClientImpl) ListWhitelistCollections(ctx context.Context, in *ListWhitelistCollectionsRequest, opts ...http.CallOption) (*ListWhitelistCollectionsReply, error) {
+	var out ListWhitelistCollectionsReply
+	pattern := "/v1/nfttransfer/whitelist/collections"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationNftTransferListWhitelistCollections))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}
