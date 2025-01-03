@@ -14,6 +14,11 @@ type NftTransferRepo interface {
 	GetTransferNft(ctx context.Context, req *pb.GetTransferNftRequest) (*pb.GetTransferNftReply, error)
 	PostSpamReport(ctx context.Context, req *pb.PostReportSpamRequest) (*pb.PostReportSpamReply, error)
 	PostNftMute(ctx context.Context, req *pb.PostReportAccountMuteRequest) (*pb.PostReportAccountMuteReply, error)
+	// Add whitelist collection methods
+	AddWhitelistCollection(ctx context.Context, req *pb.AddWhitelistCollectionRequest) (*pb.AddWhitelistCollectionReply, error)
+	DeleteWhitelistCollection(ctx context.Context, req *pb.DeleteWhitelistCollectionRequest) (*pb.DeleteWhitelistCollectionReply, error)
+	ListWhitelistCollections(ctx context.Context, req *pb.ListWhitelistCollectionsRequest) (*pb.ListWhitelistCollectionsReply, error)
+	IsCollectionWhitelisted(ctx context.Context, collectionID string) (bool, error)
 }
 
 // NftTransferUsecase
@@ -55,4 +60,19 @@ func (uc *NftTransferUsecase) GetTransferNft(ctx context.Context, req *pb.GetTra
 func (uc *NftTransferUsecase) PostNftMute(ctx context.Context, req *pb.PostReportAccountMuteRequest) (*pb.PostReportAccountMuteReply, error) {
 	res, err := uc.repo.PostNftMute(ctx, req)
 	return res, err
+}
+
+// AddWhitelistCollection implements the whitelist collection addition
+func (uc *NftTransferUsecase) AddWhitelistCollection(ctx context.Context, req *pb.AddWhitelistCollectionRequest) (*pb.AddWhitelistCollectionReply, error) {
+	return uc.repo.AddWhitelistCollection(ctx, req)
+}
+
+// DeleteWhitelistCollection implements the whitelist collection deletion
+func (uc *NftTransferUsecase) DeleteWhitelistCollection(ctx context.Context, req *pb.DeleteWhitelistCollectionRequest) (*pb.DeleteWhitelistCollectionReply, error) {
+	return uc.repo.DeleteWhitelistCollection(ctx, req)
+}
+
+// ListWhitelistCollections implements the whitelist collection listing
+func (uc *NftTransferUsecase) ListWhitelistCollections(ctx context.Context, req *pb.ListWhitelistCollectionsRequest) (*pb.ListWhitelistCollectionsReply, error) {
+	return uc.repo.ListWhitelistCollections(ctx, req)
 }
