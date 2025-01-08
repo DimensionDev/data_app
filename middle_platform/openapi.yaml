@@ -203,6 +203,65 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.nft_transfer.v1.GetNftTransferReply'
+    /v1/nfttransfer/whitelist/collection:
+        post:
+            tags:
+                - NftTransfer
+            operationId: NftTransfer_AddWhitelistCollection
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.nft_transfer.v1.AddWhitelistCollectionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.nft_transfer.v1.AddWhitelistCollectionReply'
+    /v1/nfttransfer/whitelist/collection/{collectionId}:
+        delete:
+            tags:
+                - NftTransfer
+            operationId: NftTransfer_DeleteWhitelistCollection
+            parameters:
+                - name: collectionId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.nft_transfer.v1.DeleteWhitelistCollectionReply'
+    /v1/nfttransfer/whitelist/collections:
+        get:
+            tags:
+                - NftTransfer
+            operationId: NftTransfer_ListWhitelistCollections
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: page_size
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.nft_transfer.v1.ListWhitelistCollectionsReply'
 components:
     schemas:
         api.helloworld.v1.GetDemoReply:
@@ -237,6 +296,23 @@ components:
                     type: string
                 token_id:
                     type: string
+        api.nft_transfer.v1.AddWhitelistCollectionReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: uint32
+                message:
+                    type: string
+                data:
+                    $ref: '#/components/schemas/api.nft_transfer.v1.WhitelistCollection'
+        api.nft_transfer.v1.AddWhitelistCollectionRequest:
+            type: object
+            properties:
+                collectionId:
+                    type: string
+                description:
+                    type: string
         api.nft_transfer.v1.CostSt:
             type: object
             properties:
@@ -247,6 +323,14 @@ components:
                 decimals:
                     type: integer
                     format: uint32
+        api.nft_transfer.v1.DeleteWhitelistCollectionReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: uint32
+                message:
+                    type: string
         api.nft_transfer.v1.GetNftTransferReply:
             type: object
             properties:
@@ -313,6 +397,25 @@ components:
                 page_size:
                     type: integer
                     format: uint32
+        api.nft_transfer.v1.ListWhitelistCollectionsReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: uint32
+                page:
+                    type: integer
+                    format: uint32
+                page_size:
+                    type: integer
+                    format: uint32
+                total:
+                    type: integer
+                    format: uint64
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.nft_transfer.v1.WhitelistCollection'
         api.nft_transfer.v1.NodeStArr:
             type: object
             properties:
@@ -420,6 +523,17 @@ components:
                 owner:
                     type: string
                 blockTimestamp:
+                    type: string
+        api.nft_transfer.v1.WhitelistCollection:
+            type: object
+            properties:
+                collectionId:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                description:
                     type: string
         exchange_rate.v1.BaseCurrencyReply:
             type: object

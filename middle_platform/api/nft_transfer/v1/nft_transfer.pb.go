@@ -1367,6 +1367,431 @@ func (x *CostSt) GetDecimals() uint32 {
 	return 0
 }
 
+type WhitelistCollection struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	CollectionId string  `protobuf:"bytes,1,opt,name=collection_id,json=collectionId,proto3" json:"collection_id,omitempty"`
+	CreatedAt    string  `protobuf:"bytes,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt    string  `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Description  *string `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+}
+
+func (x *WhitelistCollection) Reset() {
+	*x = WhitelistCollection{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WhitelistCollection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WhitelistCollection) ProtoMessage() {}
+
+func (x *WhitelistCollection) ProtoReflect() protoreflect.Message {
+	mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WhitelistCollection.ProtoReflect.Descriptor instead.
+func (*WhitelistCollection) Descriptor() ([]byte, []int) {
+	return file_nft_transfer_v1_nft_transfer_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *WhitelistCollection) GetCollectionId() string {
+	if x != nil {
+		return x.CollectionId
+	}
+	return ""
+}
+
+func (x *WhitelistCollection) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *WhitelistCollection) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *WhitelistCollection) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
+type AddWhitelistCollectionRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	CollectionId string  `protobuf:"bytes,1,opt,name=collection_id,json=collectionId,proto3" json:"collection_id,omitempty"`
+	Description  *string `protobuf:"bytes,2,opt,name=description,proto3,oneof" json:"description,omitempty"`
+}
+
+func (x *AddWhitelistCollectionRequest) Reset() {
+	*x = AddWhitelistCollectionRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AddWhitelistCollectionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddWhitelistCollectionRequest) ProtoMessage() {}
+
+func (x *AddWhitelistCollectionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddWhitelistCollectionRequest.ProtoReflect.Descriptor instead.
+func (*AddWhitelistCollectionRequest) Descriptor() ([]byte, []int) {
+	return file_nft_transfer_v1_nft_transfer_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *AddWhitelistCollectionRequest) GetCollectionId() string {
+	if x != nil {
+		return x.CollectionId
+	}
+	return ""
+}
+
+func (x *AddWhitelistCollectionRequest) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
+type AddWhitelistCollectionReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code    uint32               `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message string               `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Data    *WhitelistCollection `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+}
+
+func (x *AddWhitelistCollectionReply) Reset() {
+	*x = AddWhitelistCollectionReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AddWhitelistCollectionReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddWhitelistCollectionReply) ProtoMessage() {}
+
+func (x *AddWhitelistCollectionReply) ProtoReflect() protoreflect.Message {
+	mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddWhitelistCollectionReply.ProtoReflect.Descriptor instead.
+func (*AddWhitelistCollectionReply) Descriptor() ([]byte, []int) {
+	return file_nft_transfer_v1_nft_transfer_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *AddWhitelistCollectionReply) GetCode() uint32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *AddWhitelistCollectionReply) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *AddWhitelistCollectionReply) GetData() *WhitelistCollection {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+type DeleteWhitelistCollectionRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	CollectionId string `protobuf:"bytes,1,opt,name=collection_id,json=collectionId,proto3" json:"collection_id,omitempty"`
+}
+
+func (x *DeleteWhitelistCollectionRequest) Reset() {
+	*x = DeleteWhitelistCollectionRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeleteWhitelistCollectionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteWhitelistCollectionRequest) ProtoMessage() {}
+
+func (x *DeleteWhitelistCollectionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteWhitelistCollectionRequest.ProtoReflect.Descriptor instead.
+func (*DeleteWhitelistCollectionRequest) Descriptor() ([]byte, []int) {
+	return file_nft_transfer_v1_nft_transfer_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *DeleteWhitelistCollectionRequest) GetCollectionId() string {
+	if x != nil {
+		return x.CollectionId
+	}
+	return ""
+}
+
+type DeleteWhitelistCollectionReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code    uint32 `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+}
+
+func (x *DeleteWhitelistCollectionReply) Reset() {
+	*x = DeleteWhitelistCollectionReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeleteWhitelistCollectionReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteWhitelistCollectionReply) ProtoMessage() {}
+
+func (x *DeleteWhitelistCollectionReply) ProtoReflect() protoreflect.Message {
+	mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteWhitelistCollectionReply.ProtoReflect.Descriptor instead.
+func (*DeleteWhitelistCollectionReply) Descriptor() ([]byte, []int) {
+	return file_nft_transfer_v1_nft_transfer_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *DeleteWhitelistCollectionReply) GetCode() uint32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *DeleteWhitelistCollectionReply) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type ListWhitelistCollectionsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Page  uint32 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	Limit uint32 `protobuf:"varint,2,opt,name=limit,json=page_size,proto3" json:"limit,omitempty"`
+}
+
+func (x *ListWhitelistCollectionsRequest) Reset() {
+	*x = ListWhitelistCollectionsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListWhitelistCollectionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListWhitelistCollectionsRequest) ProtoMessage() {}
+
+func (x *ListWhitelistCollectionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListWhitelistCollectionsRequest.ProtoReflect.Descriptor instead.
+func (*ListWhitelistCollectionsRequest) Descriptor() ([]byte, []int) {
+	return file_nft_transfer_v1_nft_transfer_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ListWhitelistCollectionsRequest) GetPage() uint32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListWhitelistCollectionsRequest) GetLimit() uint32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListWhitelistCollectionsReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code  uint32                 `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Page  uint32                 `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	Limit uint32                 `protobuf:"varint,3,opt,name=limit,json=page_size,proto3" json:"limit,omitempty"`
+	Total uint64                 `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`
+	Data  []*WhitelistCollection `protobuf:"bytes,5,rep,name=data,proto3" json:"data,omitempty"`
+}
+
+func (x *ListWhitelistCollectionsReply) Reset() {
+	*x = ListWhitelistCollectionsReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[23]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListWhitelistCollectionsReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListWhitelistCollectionsReply) ProtoMessage() {}
+
+func (x *ListWhitelistCollectionsReply) ProtoReflect() protoreflect.Message {
+	mi := &file_nft_transfer_v1_nft_transfer_proto_msgTypes[23]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListWhitelistCollectionsReply.ProtoReflect.Descriptor instead.
+func (*ListWhitelistCollectionsReply) Descriptor() ([]byte, []int) {
+	return file_nft_transfer_v1_nft_transfer_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ListWhitelistCollectionsReply) GetCode() uint32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *ListWhitelistCollectionsReply) GetPage() uint32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListWhitelistCollectionsReply) GetLimit() uint32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListWhitelistCollectionsReply) GetTotal() uint64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *ListWhitelistCollectionsReply) GetData() []*WhitelistCollection {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 var File_nft_transfer_v1_nft_transfer_proto protoreflect.FileDescriptor
 
 var file_nft_transfer_v1_nft_transfer_proto_rawDesc = []byte{
@@ -1569,8 +1994,63 @@ var file_nft_transfer_v1_nft_transfer_proto_rawDesc = []byte{
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x79, 0x6d, 0x62, 0x6f, 0x6c, 0x12, 0x14, 0x0a, 0x05,
 	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c,
 	0x75, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x64, 0x65, 0x63, 0x69, 0x6d, 0x61, 0x6c, 0x73, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x64, 0x65, 0x63, 0x69, 0x6d, 0x61, 0x6c, 0x73, 0x32, 0xf0,
-	0x05, 0x0a, 0x0b, 0x4e, 0x66, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x12, 0xb3,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x64, 0x65, 0x63, 0x69, 0x6d, 0x61, 0x6c, 0x73, 0x22, 0xaf,
+	0x01, 0x0a, 0x13, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c,
+	0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63,
+	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x63,
+	0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x63,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x75, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09,
+	0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x25, 0x0a, 0x0b, 0x64, 0x65, 0x73,
+	0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00,
+	0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x88, 0x01, 0x01,
+	0x42, 0x0e, 0x0a, 0x0c, 0x5f, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e,
+	0x22, 0x84, 0x01, 0x0a, 0x1d, 0x41, 0x64, 0x64, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73,
+	0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x2c, 0x0a, 0x0d, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e,
+	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x07, 0xfa, 0x42, 0x04, 0x72, 0x02,
+	0x10, 0x01, 0x52, 0x0c, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64,
+	0x12, 0x25, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70,
+	0x74, 0x69, 0x6f, 0x6e, 0x88, 0x01, 0x01, 0x42, 0x0e, 0x0a, 0x0c, 0x5f, 0x64, 0x65, 0x73, 0x63,
+	0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x89, 0x01, 0x0a, 0x1b, 0x41, 0x64, 0x64, 0x57,
+	0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69,
+	0x6f, 0x6e, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x3c, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72,
+	0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c,
+	0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x04, 0x64,
+	0x61, 0x74, 0x61, 0x22, 0x50, 0x0a, 0x20, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x57, 0x68, 0x69,
+	0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2c, 0x0a, 0x0d, 0x63, 0x6f, 0x6c, 0x6c, 0x65,
+	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x07,
+	0xfa, 0x42, 0x04, 0x72, 0x02, 0x10, 0x01, 0x52, 0x0c, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x49, 0x64, 0x22, 0x4e, 0x0a, 0x1e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x57,
+	0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69,
+	0x6f, 0x6e, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x4f, 0x0a, 0x1f, 0x4c, 0x69, 0x73, 0x74, 0x57, 0x68, 0x69,
+	0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x70, 0x61, 0x67, 0x65, 0x12, 0x18, 0x0a, 0x05,
+	0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x61, 0x67,
+	0x65, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x22, 0xb5, 0x01, 0x0a, 0x1d, 0x4c, 0x69, 0x73, 0x74, 0x57,
+	0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69,
+	0x6f, 0x6e, 0x73, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x12, 0x0a, 0x04,
+	0x70, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x70, 0x61, 0x67, 0x65,
+	0x12, 0x18, 0x0a, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x09, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x73, 0x69, 0x7a, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x6f,
+	0x74, 0x61, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c,
+	0x12, 0x3c, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x28,
+	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65,
+	0x72, 0x2e, 0x76, 0x31, 0x2e, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f,
+	0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x32, 0xa0,
+	0x0a, 0x0a, 0x0b, 0x4e, 0x66, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x12, 0xb3,
 	0x01, 0x0a, 0x0e, 0x47, 0x65, 0x74, 0x4e, 0x66, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65,
 	0x72, 0x12, 0x2a, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e,
 	0x73, 0x66, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x4e, 0x66, 0x74, 0x54, 0x72,
@@ -1617,7 +2097,42 @@ var file_nft_transfer_v1_nft_transfer_proto_rawDesc = []byte{
 	0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4d, 0x75,
 	0x74, 0x65, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22, 0x18, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x12, 0x3a,
 	0x01, 0x2a, 0x22, 0x0d, 0x2f, 0x76, 0x31, 0x2f, 0x6e, 0x66, 0x74, 0x73, 0x2f, 0x6d, 0x75, 0x74,
-	0x65, 0x42, 0x3f, 0x0a, 0x13, 0x61, 0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61,
+	0x65, 0x12, 0xaf, 0x01, 0x0a, 0x16, 0x41, 0x64, 0x64, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69,
+	0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x32, 0x2e, 0x61,
+	0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x2e,
+	0x76, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43,
+	0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x30, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e, 0x73,
+	0x66, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c,
+	0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x70,
+	0x6c, 0x79, 0x22, 0x2f, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x29, 0x3a, 0x01, 0x2a, 0x22, 0x24, 0x2f,
+	0x76, 0x31, 0x2f, 0x6e, 0x66, 0x74, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x2f, 0x77,
+	0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x2f, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x12, 0xc5, 0x01, 0x0a, 0x19, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x57, 0x68,
+	0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x12, 0x35, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e,
+	0x73, 0x66, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x57, 0x68,
+	0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x6e,
+	0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x44,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f,
+	0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22, 0x3c, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x36, 0x2a, 0x34, 0x2f, 0x76, 0x31, 0x2f, 0x6e, 0x66, 0x74, 0x74, 0x72,
+	0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x2f, 0x77, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74,
+	0x2f, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x7b, 0x63, 0x6f, 0x6c,
+	0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xb3, 0x01, 0x0a, 0x18,
+	0x4c, 0x69, 0x73, 0x74, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c,
+	0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x34, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x6e,
+	0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x2e, 0x4c,
+	0x69, 0x73, 0x74, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c,
+	0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x32,
+	0x2e, 0x61, 0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65,
+	0x72, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x57, 0x68, 0x69, 0x74, 0x65, 0x6c, 0x69,
+	0x73, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x70,
+	0x6c, 0x79, 0x22, 0x2d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x27, 0x12, 0x25, 0x2f, 0x76, 0x31, 0x2f,
+	0x6e, 0x66, 0x74, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x2f, 0x77, 0x68, 0x69, 0x74,
+	0x65, 0x6c, 0x69, 0x73, 0x74, 0x2f, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x42, 0x3f, 0x0a, 0x13, 0x61, 0x70, 0x69, 0x2e, 0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61,
 	0x6e, 0x73, 0x66, 0x65, 0x72, 0x2e, 0x76, 0x31, 0x50, 0x01, 0x5a, 0x26, 0x6d, 0x69, 0x64, 0x64,
 	0x6c, 0x65, 0x5f, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x2f, 0x61, 0x70, 0x69, 0x2f,
 	0x6e, 0x66, 0x74, 0x5f, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x65, 0x72, 0x2f, 0x76, 0x31, 0x3b,
@@ -1636,25 +2151,32 @@ func file_nft_transfer_v1_nft_transfer_proto_rawDescGZIP() []byte {
 	return file_nft_transfer_v1_nft_transfer_proto_rawDescData
 }
 
-var file_nft_transfer_v1_nft_transfer_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_nft_transfer_v1_nft_transfer_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_nft_transfer_v1_nft_transfer_proto_goTypes = []interface{}{
-	(*PostReportAccountMuteRequest)(nil), // 0: api.nft_transfer.v1.PostReportAccountMuteRequest
-	(*AccountMuteReport)(nil),            // 1: api.nft_transfer.v1.AccountMuteReport
-	(*PostReportAccountMuteReply)(nil),   // 2: api.nft_transfer.v1.PostReportAccountMuteReply
-	(*GetTransferNftRequest)(nil),        // 3: api.nft_transfer.v1.GetTransferNftRequest
-	(*GetTransferNftReply)(nil),          // 4: api.nft_transfer.v1.GetTransferNftReply
-	(*TransferNft)(nil),                  // 5: api.nft_transfer.v1.TransferNft
-	(*PostReportSpamRequest)(nil),        // 6: api.nft_transfer.v1.PostReportSpamRequest
-	(*PostReportSpamReply)(nil),          // 7: api.nft_transfer.v1.PostReportSpamReply
-	(*SpamReport)(nil),                   // 8: api.nft_transfer.v1.SpamReport
-	(*GetReportSpamRequest)(nil),         // 9: api.nft_transfer.v1.GetReportSpamRequest
-	(*GetReportSpamReply)(nil),           // 10: api.nft_transfer.v1.GetReportSpamReply
-	(*GetNftTransferRequest)(nil),        // 11: api.nft_transfer.v1.GetNftTransferRequest
-	(*GetNftTransferReply)(nil),          // 12: api.nft_transfer.v1.GetNftTransferReply
-	(*PnftTransferSt)(nil),               // 13: api.nft_transfer.v1.PnftTransferSt
-	(*NodeStArr)(nil),                    // 14: api.nft_transfer.v1.NodeStArr
-	(*ActionStArr)(nil),                  // 15: api.nft_transfer.v1.ActionStArr
-	(*CostSt)(nil),                       // 16: api.nft_transfer.v1.CostSt
+	(*PostReportAccountMuteRequest)(nil),     // 0: api.nft_transfer.v1.PostReportAccountMuteRequest
+	(*AccountMuteReport)(nil),                // 1: api.nft_transfer.v1.AccountMuteReport
+	(*PostReportAccountMuteReply)(nil),       // 2: api.nft_transfer.v1.PostReportAccountMuteReply
+	(*GetTransferNftRequest)(nil),            // 3: api.nft_transfer.v1.GetTransferNftRequest
+	(*GetTransferNftReply)(nil),              // 4: api.nft_transfer.v1.GetTransferNftReply
+	(*TransferNft)(nil),                      // 5: api.nft_transfer.v1.TransferNft
+	(*PostReportSpamRequest)(nil),            // 6: api.nft_transfer.v1.PostReportSpamRequest
+	(*PostReportSpamReply)(nil),              // 7: api.nft_transfer.v1.PostReportSpamReply
+	(*SpamReport)(nil),                       // 8: api.nft_transfer.v1.SpamReport
+	(*GetReportSpamRequest)(nil),             // 9: api.nft_transfer.v1.GetReportSpamRequest
+	(*GetReportSpamReply)(nil),               // 10: api.nft_transfer.v1.GetReportSpamReply
+	(*GetNftTransferRequest)(nil),            // 11: api.nft_transfer.v1.GetNftTransferRequest
+	(*GetNftTransferReply)(nil),              // 12: api.nft_transfer.v1.GetNftTransferReply
+	(*PnftTransferSt)(nil),                   // 13: api.nft_transfer.v1.PnftTransferSt
+	(*NodeStArr)(nil),                        // 14: api.nft_transfer.v1.NodeStArr
+	(*ActionStArr)(nil),                      // 15: api.nft_transfer.v1.ActionStArr
+	(*CostSt)(nil),                           // 16: api.nft_transfer.v1.CostSt
+	(*WhitelistCollection)(nil),              // 17: api.nft_transfer.v1.WhitelistCollection
+	(*AddWhitelistCollectionRequest)(nil),    // 18: api.nft_transfer.v1.AddWhitelistCollectionRequest
+	(*AddWhitelistCollectionReply)(nil),      // 19: api.nft_transfer.v1.AddWhitelistCollectionReply
+	(*DeleteWhitelistCollectionRequest)(nil), // 20: api.nft_transfer.v1.DeleteWhitelistCollectionRequest
+	(*DeleteWhitelistCollectionReply)(nil),   // 21: api.nft_transfer.v1.DeleteWhitelistCollectionReply
+	(*ListWhitelistCollectionsRequest)(nil),  // 22: api.nft_transfer.v1.ListWhitelistCollectionsRequest
+	(*ListWhitelistCollectionsReply)(nil),    // 23: api.nft_transfer.v1.ListWhitelistCollectionsReply
 }
 var file_nft_transfer_v1_nft_transfer_proto_depIdxs = []int32{
 	1,  // 0: api.nft_transfer.v1.PostReportAccountMuteReply.data:type_name -> api.nft_transfer.v1.AccountMuteReport
@@ -1665,21 +2187,29 @@ var file_nft_transfer_v1_nft_transfer_proto_depIdxs = []int32{
 	14, // 5: api.nft_transfer.v1.PnftTransferSt.result:type_name -> api.nft_transfer.v1.NodeStArr
 	15, // 6: api.nft_transfer.v1.NodeStArr.actions:type_name -> api.nft_transfer.v1.ActionStArr
 	16, // 7: api.nft_transfer.v1.ActionStArr.cost:type_name -> api.nft_transfer.v1.CostSt
-	11, // 8: api.nft_transfer.v1.NftTransfer.GetNftTransfer:input_type -> api.nft_transfer.v1.GetNftTransferRequest
-	9,  // 9: api.nft_transfer.v1.NftTransfer.GetReportSpam:input_type -> api.nft_transfer.v1.GetReportSpamRequest
-	6,  // 10: api.nft_transfer.v1.NftTransfer.PostReportSpam:input_type -> api.nft_transfer.v1.PostReportSpamRequest
-	3,  // 11: api.nft_transfer.v1.NftTransfer.GetTransferNft:input_type -> api.nft_transfer.v1.GetTransferNftRequest
-	0,  // 12: api.nft_transfer.v1.NftTransfer.PostReportAccountMute:input_type -> api.nft_transfer.v1.PostReportAccountMuteRequest
-	12, // 13: api.nft_transfer.v1.NftTransfer.GetNftTransfer:output_type -> api.nft_transfer.v1.GetNftTransferReply
-	10, // 14: api.nft_transfer.v1.NftTransfer.GetReportSpam:output_type -> api.nft_transfer.v1.GetReportSpamReply
-	7,  // 15: api.nft_transfer.v1.NftTransfer.PostReportSpam:output_type -> api.nft_transfer.v1.PostReportSpamReply
-	4,  // 16: api.nft_transfer.v1.NftTransfer.GetTransferNft:output_type -> api.nft_transfer.v1.GetTransferNftReply
-	2,  // 17: api.nft_transfer.v1.NftTransfer.PostReportAccountMute:output_type -> api.nft_transfer.v1.PostReportAccountMuteReply
-	13, // [13:18] is the sub-list for method output_type
-	8,  // [8:13] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	17, // 8: api.nft_transfer.v1.AddWhitelistCollectionReply.data:type_name -> api.nft_transfer.v1.WhitelistCollection
+	17, // 9: api.nft_transfer.v1.ListWhitelistCollectionsReply.data:type_name -> api.nft_transfer.v1.WhitelistCollection
+	11, // 10: api.nft_transfer.v1.NftTransfer.GetNftTransfer:input_type -> api.nft_transfer.v1.GetNftTransferRequest
+	9,  // 11: api.nft_transfer.v1.NftTransfer.GetReportSpam:input_type -> api.nft_transfer.v1.GetReportSpamRequest
+	6,  // 12: api.nft_transfer.v1.NftTransfer.PostReportSpam:input_type -> api.nft_transfer.v1.PostReportSpamRequest
+	3,  // 13: api.nft_transfer.v1.NftTransfer.GetTransferNft:input_type -> api.nft_transfer.v1.GetTransferNftRequest
+	0,  // 14: api.nft_transfer.v1.NftTransfer.PostReportAccountMute:input_type -> api.nft_transfer.v1.PostReportAccountMuteRequest
+	18, // 15: api.nft_transfer.v1.NftTransfer.AddWhitelistCollection:input_type -> api.nft_transfer.v1.AddWhitelistCollectionRequest
+	20, // 16: api.nft_transfer.v1.NftTransfer.DeleteWhitelistCollection:input_type -> api.nft_transfer.v1.DeleteWhitelistCollectionRequest
+	22, // 17: api.nft_transfer.v1.NftTransfer.ListWhitelistCollections:input_type -> api.nft_transfer.v1.ListWhitelistCollectionsRequest
+	12, // 18: api.nft_transfer.v1.NftTransfer.GetNftTransfer:output_type -> api.nft_transfer.v1.GetNftTransferReply
+	10, // 19: api.nft_transfer.v1.NftTransfer.GetReportSpam:output_type -> api.nft_transfer.v1.GetReportSpamReply
+	7,  // 20: api.nft_transfer.v1.NftTransfer.PostReportSpam:output_type -> api.nft_transfer.v1.PostReportSpamReply
+	4,  // 21: api.nft_transfer.v1.NftTransfer.GetTransferNft:output_type -> api.nft_transfer.v1.GetTransferNftReply
+	2,  // 22: api.nft_transfer.v1.NftTransfer.PostReportAccountMute:output_type -> api.nft_transfer.v1.PostReportAccountMuteReply
+	19, // 23: api.nft_transfer.v1.NftTransfer.AddWhitelistCollection:output_type -> api.nft_transfer.v1.AddWhitelistCollectionReply
+	21, // 24: api.nft_transfer.v1.NftTransfer.DeleteWhitelistCollection:output_type -> api.nft_transfer.v1.DeleteWhitelistCollectionReply
+	23, // 25: api.nft_transfer.v1.NftTransfer.ListWhitelistCollections:output_type -> api.nft_transfer.v1.ListWhitelistCollectionsReply
+	18, // [18:26] is the sub-list for method output_type
+	10, // [10:18] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_nft_transfer_v1_nft_transfer_proto_init() }
@@ -1892,19 +2422,105 @@ func file_nft_transfer_v1_nft_transfer_proto_init() {
 				return nil
 			}
 		}
+		file_nft_transfer_v1_nft_transfer_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*WhitelistCollection); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nft_transfer_v1_nft_transfer_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AddWhitelistCollectionRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nft_transfer_v1_nft_transfer_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AddWhitelistCollectionReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nft_transfer_v1_nft_transfer_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteWhitelistCollectionRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nft_transfer_v1_nft_transfer_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteWhitelistCollectionReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nft_transfer_v1_nft_transfer_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListWhitelistCollectionsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_nft_transfer_v1_nft_transfer_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListWhitelistCollectionsReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_nft_transfer_v1_nft_transfer_proto_msgTypes[1].OneofWrappers = []interface{}{}
 	file_nft_transfer_v1_nft_transfer_proto_msgTypes[6].OneofWrappers = []interface{}{}
 	file_nft_transfer_v1_nft_transfer_proto_msgTypes[8].OneofWrappers = []interface{}{}
 	file_nft_transfer_v1_nft_transfer_proto_msgTypes[11].OneofWrappers = []interface{}{}
 	file_nft_transfer_v1_nft_transfer_proto_msgTypes[13].OneofWrappers = []interface{}{}
+	file_nft_transfer_v1_nft_transfer_proto_msgTypes[17].OneofWrappers = []interface{}{}
+	file_nft_transfer_v1_nft_transfer_proto_msgTypes[18].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_nft_transfer_v1_nft_transfer_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

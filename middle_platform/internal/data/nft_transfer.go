@@ -832,8 +832,20 @@ func (r *NftTransferRepo) GetHandleNftinfoFromDB(req *pb.GetNftTransferRequest) 
 		group_by += " group by chain,transaction_hash,owner,event_type,block_timestamp"
 	}
 
-	spam_filter_condition := " AND NOT EXISTS (SELECT 1 FROM spam_collections_with_bucket sp WHERE nft_transfer_summary_selected_chains.collection_id = sp.collection_id)"
-	first_q := "SELECT chain, transaction_hash, owner, event_type, block_timestamp FROM nft_transfer_summary_selected_chains " + str_where + spam_filter_condition + str_order + str_limit
+	// 修改spam过滤条件，排除白名单中的collection
+	spam_filter_condition := " AND (NOT EXISTS (SELECT 1 FROM spam_collections_with_bucket sp WHERE nft_transfer_summary_selected_chains.collection_id = sp.collection_id) OR EXISTS (SELECT 1 FROM nft_whitelist_collections wl WHERE nft_transfer_summary_selected_chains.collection_id = wl.collection_id))"
+
+	first_q := "SELECT " +
+		"chain, " +
+		"transaction_hash, " +
+		"owner, " +
+		"event_type, " +
+		"block_timestamp " +
+		"FROM nft_transfer_summary_selected_chains " +
+		str_where +
+		spam_filter_condition +
+		str_order +
+		str_limit
 	query_first_start := time.Now()
 	first_res, err := r.data.data_query(first_q)
 	timeTrack(query_first_start, "Query first result")
@@ -1294,4 +1306,187 @@ func (r *NftTransferRepo) updateDataNodes(data_nodes map[string]NftTransfertmpSt
 		node.actios[action_ukey] = action
 		data_nodes[node_ukey] = node
 	}
+}
+
+// WhitelistCollection represents a whitelisted collection in the database
+type WhitelistCollection struct {
+	CollectionID string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Description  sql.NullString
+}
+
+// AddWhitelistCollection implements the whitelist collection addition
+func (r *NftTransferRepo) AddWhitelistCollection(ctx context.Context, req *pb.AddWhitelistCollectionRequest) (*pb.AddWhitelistCollectionReply, error) {
+	if r == nil {
+		return nil, fmt.Errorf("NftTransferRepo is nil")
+	}
+
+	now := time.Now()
+	var description sql.NullString
+	if req.Description != nil {
+		description = sql.NullString{String: *req.Description, Valid: *req.Description != ""}
+	} else {
+		description = sql.NullString{Valid: false}
+	}
+
+	query := fmt.Sprintf(
+		"INSERT INTO nft_whitelist_collections (collection_id, created_at, updated_at, description) VALUES ('%s', '%s', '%s', '%s')",
+		req.CollectionId, now.Format(time.RFC3339), now.Format(time.RFC3339), description.String,
+	)
+
+	// // Create a new context with timeout
+	// newCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	// defer cancel()
+
+	_, err := r.data.data_query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add whitelist collection: %v", err)
+	}
+
+	return &pb.AddWhitelistCollectionReply{
+		Code:    0,
+		Message: "Success",
+		Data: &pb.WhitelistCollection{
+			CollectionId: req.CollectionId,
+			CreatedAt:    now.Format(time.RFC3339),
+			UpdatedAt:    now.Format(time.RFC3339),
+			Description:  req.Description,
+		},
+	}, nil
+}
+
+// DeleteWhitelistCollection implements the whitelist collection deletion
+func (r *NftTransferRepo) DeleteWhitelistCollection(ctx context.Context, req *pb.DeleteWhitelistCollectionRequest) (*pb.DeleteWhitelistCollectionReply, error) {
+	query := fmt.Sprintf("DELETE FROM nft_whitelist_collections WHERE collection_id = '%s'", req.CollectionId)
+
+	result, err := r.data.DataBaseCli.ExecContext(context.Background(), query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete whitelist collection: %v", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get affected rows: %v", err)
+	}
+
+	if affected == 0 {
+		return &pb.DeleteWhitelistCollectionReply{
+			Code:    404,
+			Message: "Collection not found in whitelist",
+		}, nil
+	}
+
+	return &pb.DeleteWhitelistCollectionReply{
+		Code:    0,
+		Message: "Success",
+	}, nil
+}
+
+// ListWhitelistCollections implements the whitelist collection listing
+func (r *NftTransferRepo) ListWhitelistCollections(ctx context.Context, req *pb.ListWhitelistCollectionsRequest) (*pb.ListWhitelistCollectionsReply, error) {
+	page := req.Page
+	if page == 0 {
+		page = 1
+	}
+	limit := req.Limit
+	if limit == 0 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
+	// Get total count
+	var total uint64
+	countQuery := "SELECT COUNT(*) FROM nft_whitelist_collections"
+	countRes, err := r.data.data_query_single(countQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total count: %v", err)
+	}
+	if err := countRes.Scan(&total); err != nil {
+		return nil, fmt.Errorf("failed to scan total count: %v", err)
+	}
+	fmt.Printf("Total count: %d\n", total)
+
+	// Get paginated results
+	query := fmt.Sprintf(
+		"SELECT collection_id, created_at, updated_at, description FROM nft_whitelist_collections ORDER BY created_at DESC LIMIT %d OFFSET %d",
+		limit, offset,
+	)
+	fmt.Printf("Query: %s\n", query)
+
+	rows, err := r.data.data_query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list whitelist collections: %v", err)
+	}
+	defer rows.Close()
+
+	var collections []*pb.WhitelistCollection
+	for rows.Next() {
+		var collectionID string
+		var createdAt []uint8
+		var updatedAt []uint8
+		var description sql.NullString
+
+		err := rows.Scan(&collectionID, &createdAt, &updatedAt, &description)
+		if err != nil {
+			fmt.Printf("Error scanning row: %v\n", err)
+			return nil, fmt.Errorf("failed to scan whitelist collection: %v", err)
+		}
+
+		// Parse timestamps
+		createdTime, err := time.Parse(time.DateTime, string(createdAt))
+		if err != nil {
+			fmt.Printf("Error parsing created_at: %v\n", err)
+			continue
+		}
+
+		updatedTime, err := time.Parse(time.DateTime, string(updatedAt))
+		if err != nil {
+			fmt.Printf("Error parsing updated_at: %v\n", err)
+			continue
+		}
+
+		var desc *string
+		if description.Valid {
+			desc = &description.String
+		}
+
+		collection := &pb.WhitelistCollection{
+			CollectionId: collectionID,
+			CreatedAt:    createdTime.Format(time.RFC3339),
+			UpdatedAt:    updatedTime.Format(time.RFC3339),
+			Description:  desc,
+		}
+
+		fmt.Printf("Adding collection to result: %+v\n", collection)
+		collections = append(collections, collection)
+	}
+
+	if err = rows.Err(); err != nil {
+		fmt.Printf("Error after scanning rows: %v\n", err)
+		return nil, fmt.Errorf("error after scanning rows: %v", err)
+	}
+
+	fmt.Printf("Found %d collections\n", len(collections))
+
+	return &pb.ListWhitelistCollectionsReply{
+		Code:  0,
+		Page:  req.Page,
+		Limit: req.Limit,
+		Total: total,
+		Data:  collections,
+	}, nil
+}
+
+// IsCollectionWhitelisted checks if a collection is in the whitelist
+func (r *NftTransferRepo) IsCollectionWhitelisted(ctx context.Context, collectionID string) (bool, error) {
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM nft_whitelist_collections WHERE collection_id = ?)`
+
+	err := r.data.DataBaseCli.QueryRowContext(context.Background(), query, collectionID).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check whitelist status: %v", err)
+	}
+
+	return exists, nil
 }
