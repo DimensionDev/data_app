@@ -488,6 +488,10 @@ components:
                     type: string
                 source:
                     type: string
+                createBy:
+                    type: string
+                updateBy:
+                    type: string
         api.nft_transfer.v1.SpamReport:
             type: object
             properties:
@@ -500,6 +504,10 @@ components:
                 update_at:
                     type: string
                 source:
+                    type: string
+                create_by:
+                    type: string
+                update_by:
                     type: string
         api.nft_transfer.v1.TransferNft:
             type: object

@@ -115,6 +115,8 @@ message PostReportSpamRequest {
 	optional string create_at = 3;
 	optional string update_at = 4;
 	optional string source = 5;
+	optional string create_by = 6;  // Format: "platform:{id/handle}" (e.g. "twitter:handle", "farcaster:handle", "lens:handle")
+	optional string update_by = 7;  // Format: same as create_by
 }
 
 message PostReportSpamReply {
@@ -129,6 +131,8 @@ message SpamReport {
 	optional string create_at = 3[json_name = "create_at"];
 	optional string update_at = 4[json_name = "update_at"];
 	optional string source = 5[json_name = "source"];
+	optional string create_by = 6[json_name = "create_by"];  // Format: "platform:{id/handle}" (e.g. "twitter:handle", "farcaster:handle", "lens:handle")
+	optional string update_by = 7[json_name = "update_by"];  // Format: same as create_by
 }
 
 message GetReportSpamRequest {
