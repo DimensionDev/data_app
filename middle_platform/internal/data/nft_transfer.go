@@ -1517,3 +1517,209 @@ func (r *NftTransferRepo) IsCollectionWhitelisted(ctx context.Context, collectio
 
 	return exists, nil
 }
+
+// WhitelistAddress represents a whitelisted address in the database
+type WhitelistAddress struct {
+	Address     string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Description sql.NullString
+	Chain       sql.NullString
+}
+
+// AddWhitelistAddress implements the whitelist address addition
+func (r *NftTransferRepo) AddWhitelistAddress(ctx context.Context, req *pb.AddWhitelistAddressRequest) (*pb.AddWhitelistAddressReply, error) {
+	if r == nil {
+		return nil, fmt.Errorf("NftTransferRepo is nil")
+	}
+
+	now := time.Now().UTC()
+	var description string
+	if req.Description != nil {
+		description = *req.Description
+	}
+
+	var chain string
+	if req.Chain != nil {
+		chain = *req.Chain
+	}
+
+	// For OLAP database, we use single quotes for string values and NULL for null values
+	query := fmt.Sprintf(
+		"INSERT INTO nft_whitelist_addresses (address, created_at, updated_at, description, chain) VALUES ('%s', '%s', '%s', %s, %s)",
+		req.Address,
+		now.Format(time.DateTime),
+		now.Format(time.DateTime),
+		formatNullableString(description),
+		formatNullableString(chain),
+	)
+
+	_, err := r.data.data_query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add whitelist address: %v", err)
+	}
+
+	return &pb.AddWhitelistAddressReply{
+		Code:    0,
+		Message: "Success",
+		Data: &pb.WhitelistAddress{
+			Address:     req.Address,
+			CreatedAt:   now.Format(time.RFC3339),
+			UpdatedAt:   now.Format(time.RFC3339),
+			Description: req.Description,
+			Chain:       req.Chain,
+		},
+	}, nil
+}
+
+// DeleteWhitelistAddress implements the whitelist address deletion
+func (r *NftTransferRepo) DeleteWhitelistAddress(ctx context.Context, req *pb.DeleteWhitelistAddressRequest) (*pb.DeleteWhitelistAddressReply, error) {
+	// First check if the address exists
+	exists, err := r.IsAddressWhitelisted(ctx, req.Address, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check address existence: %v", err)
+	}
+
+	if !exists {
+		return &pb.DeleteWhitelistAddressReply{
+			Code:    404,
+			Message: "Address not found in whitelist",
+		}, nil
+	}
+
+	query := fmt.Sprintf("DELETE FROM nft_whitelist_addresses WHERE address = '%s'", req.Address)
+	_, err = r.data.data_query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete whitelist address: %v", err)
+	}
+
+	return &pb.DeleteWhitelistAddressReply{
+		Code:    0,
+		Message: "Success",
+	}, nil
+}
+
+// ListWhitelistAddresses implements the whitelist address listing
+func (r *NftTransferRepo) ListWhitelistAddresses(ctx context.Context, req *pb.ListWhitelistAddressesRequest) (*pb.ListWhitelistAddressesReply, error) {
+	page := req.Page
+	if page == 0 {
+		page = 1
+	}
+	limit := req.Limit
+	if limit == 0 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
+	// Get total count
+	var total uint64
+	countQuery := "SELECT COUNT(*) FROM nft_whitelist_addresses"
+	if req.Chain != nil && *req.Chain != "" {
+		countQuery += fmt.Sprintf(" WHERE chain = '%s'", *req.Chain)
+	}
+	countRes, err := r.data.data_query_single(countQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total count: %v", err)
+	}
+	if err := countRes.Scan(&total); err != nil {
+		return nil, fmt.Errorf("failed to scan total count: %v", err)
+	}
+
+	// Get paginated results
+	query := "SELECT address, created_at, updated_at, description, chain FROM nft_whitelist_addresses"
+	if req.Chain != nil && *req.Chain != "" {
+		query += fmt.Sprintf(" WHERE chain = '%s'", *req.Chain)
+	}
+	query += fmt.Sprintf(" ORDER BY created_at DESC LIMIT %d OFFSET %d", limit, offset)
+
+	rows, err := r.data.data_query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list whitelist addresses: %v", err)
+	}
+	defer rows.Close()
+
+	var addresses []*pb.WhitelistAddress
+	for rows.Next() {
+		var address string
+		var createdAt, updatedAt []uint8
+		var description, chain sql.NullString
+
+		err := rows.Scan(&address, &createdAt, &updatedAt, &description, &chain)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan whitelist address: %v", err)
+		}
+
+		// Parse timestamps
+		createdTime, err := time.Parse(time.DateTime, string(createdAt))
+		if err != nil {
+			fmt.Printf("Error parsing created_at: %v\n", err)
+			continue
+		}
+
+		updatedTime, err := time.Parse(time.DateTime, string(updatedAt))
+		if err != nil {
+			fmt.Printf("Error parsing updated_at: %v\n", err)
+			continue
+		}
+
+		var desc *string
+		if description.Valid {
+			desc = &description.String
+		}
+
+		var ch *string
+		if chain.Valid {
+			ch = &chain.String
+		}
+
+		whitelistAddress := &pb.WhitelistAddress{
+			Address:     address,
+			CreatedAt:   createdTime.Format(time.RFC3339),
+			UpdatedAt:   updatedTime.Format(time.RFC3339),
+			Description: desc,
+			Chain:       ch,
+		}
+
+		addresses = append(addresses, whitelistAddress)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error after scanning rows: %v", err)
+	}
+
+	return &pb.ListWhitelistAddressesReply{
+		Code:  0,
+		Page:  req.Page,
+		Limit: req.Limit,
+		Total: total,
+		Data:  addresses,
+	}, nil
+}
+
+// IsAddressWhitelisted checks if an address is in the whitelist
+func (r *NftTransferRepo) IsAddressWhitelisted(ctx context.Context, address string, chain *string) (bool, error) {
+	query := fmt.Sprintf("SELECT COUNT(*) FROM nft_whitelist_addresses WHERE address = '%s'", address)
+	if chain != nil && *chain != "" {
+		query += fmt.Sprintf(" AND chain = '%s'", *chain)
+	}
+
+	var count int
+	row, err := r.data.data_query_single(query)
+	if err != nil {
+		return false, fmt.Errorf("failed to execute query: %v", err)
+	}
+
+	if err := row.Scan(&count); err != nil {
+		return false, fmt.Errorf("failed to check whitelist status: %v", err)
+	}
+
+	return count > 0, nil
+}
+
+// Helper function to format nullable string for SQL
+func formatNullableString(s string) string {
+	if s == "" {
+		return "NULL"
+	}
+	return fmt.Sprintf("'%s'", s)
+}

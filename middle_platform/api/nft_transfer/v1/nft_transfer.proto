@@ -64,6 +64,25 @@ service NftTransfer {
 			get: "/v1/nfttransfer/whitelist/collections"
 		};
 	};
+
+	rpc AddWhitelistAddress (AddWhitelistAddressRequest) returns (AddWhitelistAddressReply) {
+		option (google.api.http) = {
+			post: "/v1/nfttransfer/whitelist/address",
+			body: "*"
+		};
+	};
+
+	rpc DeleteWhitelistAddress (DeleteWhitelistAddressRequest) returns (DeleteWhitelistAddressReply) {
+		option (google.api.http) = {
+			delete: "/v1/nfttransfer/whitelist/address/{address}"
+		};
+	};
+
+	rpc ListWhitelistAddresses (ListWhitelistAddressesRequest) returns (ListWhitelistAddressesReply) {
+		option (google.api.http) = {
+			get: "/v1/nfttransfer/whitelist/addresses"
+		};
+	};
 }
 message PostReportAccountMuteRequest {
 	string account_id = 1;
@@ -243,4 +262,47 @@ message ListWhitelistCollectionsReply {
 	uint32 limit = 3[json_name = "page_size"];
 	uint64 total = 4;
 	repeated WhitelistCollection data = 5;
+}
+
+message WhitelistAddress {
+	string address = 1;
+	string created_at = 2;
+	string updated_at = 3;
+	optional string description = 4;
+	optional string chain = 5;
+}
+
+message AddWhitelistAddressRequest {
+	string address = 1[(validate.rules).string.min_len = 1];
+	optional string description = 2;
+	optional string chain = 3;
+}
+
+message AddWhitelistAddressReply {
+	uint32 code = 1;
+	string message = 2;
+	WhitelistAddress data = 3;
+}
+
+message DeleteWhitelistAddressRequest {
+	string address = 1[(validate.rules).string.min_len = 1];
+}
+
+message DeleteWhitelistAddressReply {
+	uint32 code = 1;
+	string message = 2;
+}
+
+message ListWhitelistAddressesRequest {
+	uint32 page = 1;
+	uint32 limit = 2[json_name = "page_size"];
+	optional string chain = 3;
+}
+
+message ListWhitelistAddressesReply {
+	uint32 code = 1;
+	uint32 page = 2;
+	uint32 limit = 3[json_name = "page_size"];
+	uint64 total = 4;
+	repeated WhitelistAddress data = 5;
 }

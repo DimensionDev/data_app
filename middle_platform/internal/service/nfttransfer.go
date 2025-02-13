@@ -69,3 +69,18 @@ func (s *NftTransferService) DeleteWhitelistCollection(ctx context.Context, req 
 func (s *NftTransferService) ListWhitelistCollections(ctx context.Context, req *pb.ListWhitelistCollectionsRequest) (*pb.ListWhitelistCollectionsReply, error) {
 	return s.uc.ListWhitelistCollections(ctx, req)
 }
+
+// AddWhitelistAddress 添加白名单地址
+func (s *NftTransferService) AddWhitelistAddress(ctx context.Context, req *pb.AddWhitelistAddressRequest) (*pb.AddWhitelistAddressReply, error) {
+	return s.uc.AddWhitelistAddress(ctx, req)
+}
+
+// DeleteWhitelistAddress 删除白名单地址
+func (s *NftTransferService) DeleteWhitelistAddress(ctx context.Context, req *pb.DeleteWhitelistAddressRequest) (*pb.DeleteWhitelistAddressReply, error) {
+	return s.uc.DeleteWhitelistAddress(ctx, req)
+}
+
+// ListWhitelistAddresses 获取白名单地址列表
+func (s *NftTransferService) ListWhitelistAddresses(ctx context.Context, req *pb.ListWhitelistAddressesRequest) (*pb.ListWhitelistAddressesReply, error) {
+	return s.uc.ListWhitelistAddresses(ctx, req)
+}

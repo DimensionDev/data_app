@@ -27,6 +27,9 @@ const (
 	NftTransfer_AddWhitelistCollection_FullMethodName    = "/api.nft_transfer.v1.NftTransfer/AddWhitelistCollection"
 	NftTransfer_DeleteWhitelistCollection_FullMethodName = "/api.nft_transfer.v1.NftTransfer/DeleteWhitelistCollection"
 	NftTransfer_ListWhitelistCollections_FullMethodName  = "/api.nft_transfer.v1.NftTransfer/ListWhitelistCollections"
+	NftTransfer_AddWhitelistAddress_FullMethodName       = "/api.nft_transfer.v1.NftTransfer/AddWhitelistAddress"
+	NftTransfer_DeleteWhitelistAddress_FullMethodName    = "/api.nft_transfer.v1.NftTransfer/DeleteWhitelistAddress"
+	NftTransfer_ListWhitelistAddresses_FullMethodName    = "/api.nft_transfer.v1.NftTransfer/ListWhitelistAddresses"
 )
 
 // NftTransferClient is the client API for NftTransfer service.
@@ -41,6 +44,9 @@ type NftTransferClient interface {
 	AddWhitelistCollection(ctx context.Context, in *AddWhitelistCollectionRequest, opts ...grpc.CallOption) (*AddWhitelistCollectionReply, error)
 	DeleteWhitelistCollection(ctx context.Context, in *DeleteWhitelistCollectionRequest, opts ...grpc.CallOption) (*DeleteWhitelistCollectionReply, error)
 	ListWhitelistCollections(ctx context.Context, in *ListWhitelistCollectionsRequest, opts ...grpc.CallOption) (*ListWhitelistCollectionsReply, error)
+	AddWhitelistAddress(ctx context.Context, in *AddWhitelistAddressRequest, opts ...grpc.CallOption) (*AddWhitelistAddressReply, error)
+	DeleteWhitelistAddress(ctx context.Context, in *DeleteWhitelistAddressRequest, opts ...grpc.CallOption) (*DeleteWhitelistAddressReply, error)
+	ListWhitelistAddresses(ctx context.Context, in *ListWhitelistAddressesRequest, opts ...grpc.CallOption) (*ListWhitelistAddressesReply, error)
 }
 
 type nftTransferClient struct {
@@ -123,6 +129,33 @@ func (c *nftTransferClient) ListWhitelistCollections(ctx context.Context, in *Li
 	return out, nil
 }
 
+func (c *nftTransferClient) AddWhitelistAddress(ctx context.Context, in *AddWhitelistAddressRequest, opts ...grpc.CallOption) (*AddWhitelistAddressReply, error) {
+	out := new(AddWhitelistAddressReply)
+	err := c.cc.Invoke(ctx, NftTransfer_AddWhitelistAddress_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nftTransferClient) DeleteWhitelistAddress(ctx context.Context, in *DeleteWhitelistAddressRequest, opts ...grpc.CallOption) (*DeleteWhitelistAddressReply, error) {
+	out := new(DeleteWhitelistAddressReply)
+	err := c.cc.Invoke(ctx, NftTransfer_DeleteWhitelistAddress_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nftTransferClient) ListWhitelistAddresses(ctx context.Context, in *ListWhitelistAddressesRequest, opts ...grpc.CallOption) (*ListWhitelistAddressesReply, error) {
+	out := new(ListWhitelistAddressesReply)
+	err := c.cc.Invoke(ctx, NftTransfer_ListWhitelistAddresses_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NftTransferServer is the server API for NftTransfer service.
 // All implementations must embed UnimplementedNftTransferServer
 // for forward compatibility
@@ -135,6 +168,9 @@ type NftTransferServer interface {
 	AddWhitelistCollection(context.Context, *AddWhitelistCollectionRequest) (*AddWhitelistCollectionReply, error)
 	DeleteWhitelistCollection(context.Context, *DeleteWhitelistCollectionRequest) (*DeleteWhitelistCollectionReply, error)
 	ListWhitelistCollections(context.Context, *ListWhitelistCollectionsRequest) (*ListWhitelistCollectionsReply, error)
+	AddWhitelistAddress(context.Context, *AddWhitelistAddressRequest) (*AddWhitelistAddressReply, error)
+	DeleteWhitelistAddress(context.Context, *DeleteWhitelistAddressRequest) (*DeleteWhitelistAddressReply, error)
+	ListWhitelistAddresses(context.Context, *ListWhitelistAddressesRequest) (*ListWhitelistAddressesReply, error)
 	mustEmbedUnimplementedNftTransferServer()
 }
 
@@ -165,6 +201,15 @@ func (UnimplementedNftTransferServer) DeleteWhitelistCollection(context.Context,
 }
 func (UnimplementedNftTransferServer) ListWhitelistCollections(context.Context, *ListWhitelistCollectionsRequest) (*ListWhitelistCollectionsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListWhitelistCollections not implemented")
+}
+func (UnimplementedNftTransferServer) AddWhitelistAddress(context.Context, *AddWhitelistAddressRequest) (*AddWhitelistAddressReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddWhitelistAddress not implemented")
+}
+func (UnimplementedNftTransferServer) DeleteWhitelistAddress(context.Context, *DeleteWhitelistAddressRequest) (*DeleteWhitelistAddressReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteWhitelistAddress not implemented")
+}
+func (UnimplementedNftTransferServer) ListWhitelistAddresses(context.Context, *ListWhitelistAddressesRequest) (*ListWhitelistAddressesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListWhitelistAddresses not implemented")
 }
 func (UnimplementedNftTransferServer) mustEmbedUnimplementedNftTransferServer() {}
 
@@ -323,6 +368,60 @@ func _NftTransfer_ListWhitelistCollections_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NftTransfer_AddWhitelistAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddWhitelistAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).AddWhitelistAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_AddWhitelistAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).AddWhitelistAddress(ctx, req.(*AddWhitelistAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NftTransfer_DeleteWhitelistAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteWhitelistAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).DeleteWhitelistAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_DeleteWhitelistAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).DeleteWhitelistAddress(ctx, req.(*DeleteWhitelistAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NftTransfer_ListWhitelistAddresses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListWhitelistAddressesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).ListWhitelistAddresses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_ListWhitelistAddresses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).ListWhitelistAddresses(ctx, req.(*ListWhitelistAddressesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NftTransfer_ServiceDesc is the grpc.ServiceDesc for NftTransfer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -361,6 +460,18 @@ var NftTransfer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListWhitelistCollections",
 			Handler:    _NftTransfer_ListWhitelistCollections_Handler,
+		},
+		{
+			MethodName: "AddWhitelistAddress",
+			Handler:    _NftTransfer_AddWhitelistAddress_Handler,
+		},
+		{
+			MethodName: "DeleteWhitelistAddress",
+			Handler:    _NftTransfer_DeleteWhitelistAddress_Handler,
+		},
+		{
+			MethodName: "ListWhitelistAddresses",
+			Handler:    _NftTransfer_ListWhitelistAddresses_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

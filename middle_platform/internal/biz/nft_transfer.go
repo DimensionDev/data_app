@@ -19,6 +19,11 @@ type NftTransferRepo interface {
 	DeleteWhitelistCollection(ctx context.Context, req *pb.DeleteWhitelistCollectionRequest) (*pb.DeleteWhitelistCollectionReply, error)
 	ListWhitelistCollections(ctx context.Context, req *pb.ListWhitelistCollectionsRequest) (*pb.ListWhitelistCollectionsReply, error)
 	IsCollectionWhitelisted(ctx context.Context, collectionID string) (bool, error)
+	// Add whitelist address methods
+	AddWhitelistAddress(ctx context.Context, req *pb.AddWhitelistAddressRequest) (*pb.AddWhitelistAddressReply, error)
+	DeleteWhitelistAddress(ctx context.Context, req *pb.DeleteWhitelistAddressRequest) (*pb.DeleteWhitelistAddressReply, error)
+	ListWhitelistAddresses(ctx context.Context, req *pb.ListWhitelistAddressesRequest) (*pb.ListWhitelistAddressesReply, error)
+	IsAddressWhitelisted(ctx context.Context, address string, chain *string) (bool, error)
 }
 
 // NftTransferUsecase
@@ -75,4 +80,19 @@ func (uc *NftTransferUsecase) DeleteWhitelistCollection(ctx context.Context, req
 // ListWhitelistCollections implements the whitelist collection listing
 func (uc *NftTransferUsecase) ListWhitelistCollections(ctx context.Context, req *pb.ListWhitelistCollectionsRequest) (*pb.ListWhitelistCollectionsReply, error) {
 	return uc.repo.ListWhitelistCollections(ctx, req)
+}
+
+// AddWhitelistAddress implements the whitelist address addition
+func (uc *NftTransferUsecase) AddWhitelistAddress(ctx context.Context, req *pb.AddWhitelistAddressRequest) (*pb.AddWhitelistAddressReply, error) {
+	return uc.repo.AddWhitelistAddress(ctx, req)
+}
+
+// DeleteWhitelistAddress implements the whitelist address deletion
+func (uc *NftTransferUsecase) DeleteWhitelistAddress(ctx context.Context, req *pb.DeleteWhitelistAddressRequest) (*pb.DeleteWhitelistAddressReply, error) {
+	return uc.repo.DeleteWhitelistAddress(ctx, req)
+}
+
+// ListWhitelistAddresses implements the whitelist address listing
+func (uc *NftTransferUsecase) ListWhitelistAddresses(ctx context.Context, req *pb.ListWhitelistAddressesRequest) (*pb.ListWhitelistAddressesReply, error) {
+	return uc.repo.ListWhitelistAddresses(ctx, req)
 }
