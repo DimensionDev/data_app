@@ -27,6 +27,7 @@ const (
 	NftTransfer_AddWhitelistCollection_FullMethodName    = "/api.nft_transfer.v1.NftTransfer/AddWhitelistCollection"
 	NftTransfer_DeleteWhitelistCollection_FullMethodName = "/api.nft_transfer.v1.NftTransfer/DeleteWhitelistCollection"
 	NftTransfer_ListWhitelistCollections_FullMethodName  = "/api.nft_transfer.v1.NftTransfer/ListWhitelistCollections"
+	NftTransfer_GetSupportedChains_FullMethodName        = "/api.nft_transfer.v1.NftTransfer/GetSupportedChains"
 )
 
 // NftTransferClient is the client API for NftTransfer service.
@@ -41,6 +42,7 @@ type NftTransferClient interface {
 	AddWhitelistCollection(ctx context.Context, in *AddWhitelistCollectionRequest, opts ...grpc.CallOption) (*AddWhitelistCollectionReply, error)
 	DeleteWhitelistCollection(ctx context.Context, in *DeleteWhitelistCollectionRequest, opts ...grpc.CallOption) (*DeleteWhitelistCollectionReply, error)
 	ListWhitelistCollections(ctx context.Context, in *ListWhitelistCollectionsRequest, opts ...grpc.CallOption) (*ListWhitelistCollectionsReply, error)
+	GetSupportedChains(ctx context.Context, in *GetSupportedChainsRequest, opts ...grpc.CallOption) (*GetSupportedChainsReply, error)
 }
 
 type nftTransferClient struct {
@@ -123,6 +125,15 @@ func (c *nftTransferClient) ListWhitelistCollections(ctx context.Context, in *Li
 	return out, nil
 }
 
+func (c *nftTransferClient) GetSupportedChains(ctx context.Context, in *GetSupportedChainsRequest, opts ...grpc.CallOption) (*GetSupportedChainsReply, error) {
+	out := new(GetSupportedChainsReply)
+	err := c.cc.Invoke(ctx, NftTransfer_GetSupportedChains_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NftTransferServer is the server API for NftTransfer service.
 // All implementations must embed UnimplementedNftTransferServer
 // for forward compatibility
@@ -135,6 +146,7 @@ type NftTransferServer interface {
 	AddWhitelistCollection(context.Context, *AddWhitelistCollectionRequest) (*AddWhitelistCollectionReply, error)
 	DeleteWhitelistCollection(context.Context, *DeleteWhitelistCollectionRequest) (*DeleteWhitelistCollectionReply, error)
 	ListWhitelistCollections(context.Context, *ListWhitelistCollectionsRequest) (*ListWhitelistCollectionsReply, error)
+	GetSupportedChains(context.Context, *GetSupportedChainsRequest) (*GetSupportedChainsReply, error)
 	mustEmbedUnimplementedNftTransferServer()
 }
 
@@ -165,6 +177,9 @@ func (UnimplementedNftTransferServer) DeleteWhitelistCollection(context.Context,
 }
 func (UnimplementedNftTransferServer) ListWhitelistCollections(context.Context, *ListWhitelistCollectionsRequest) (*ListWhitelistCollectionsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListWhitelistCollections not implemented")
+}
+func (UnimplementedNftTransferServer) GetSupportedChains(context.Context, *GetSupportedChainsRequest) (*GetSupportedChainsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSupportedChains not implemented")
 }
 func (UnimplementedNftTransferServer) mustEmbedUnimplementedNftTransferServer() {}
 
@@ -323,6 +338,24 @@ func _NftTransfer_ListWhitelistCollections_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NftTransfer_GetSupportedChains_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSupportedChainsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NftTransferServer).GetSupportedChains(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NftTransfer_GetSupportedChains_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NftTransferServer).GetSupportedChains(ctx, req.(*GetSupportedChainsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NftTransfer_ServiceDesc is the grpc.ServiceDesc for NftTransfer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -361,6 +394,10 @@ var NftTransfer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListWhitelistCollections",
 			Handler:    _NftTransfer_ListWhitelistCollections_Handler,
+		},
+		{
+			MethodName: "GetSupportedChains",
+			Handler:    _NftTransfer_GetSupportedChains_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

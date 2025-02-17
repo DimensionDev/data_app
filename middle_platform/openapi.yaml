@@ -203,6 +203,18 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.nft_transfer.v1.GetNftTransferReply'
+    /v1/nfttransfer/supported-chains:
+        get:
+            tags:
+                - NftTransfer
+            operationId: NftTransfer_GetSupportedChains
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.nft_transfer.v1.GetSupportedChainsReply'
     /v1/nfttransfer/whitelist/collection:
         post:
             tags:
@@ -313,6 +325,11 @@ components:
                     type: string
                 description:
                     type: string
+        api.nft_transfer.v1.ChainInfo:
+            type: object
+            properties:
+                name:
+                    type: string
         api.nft_transfer.v1.CostSt:
             type: object
             properties:
@@ -363,6 +380,18 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.nft_transfer.v1.SpamReport'
+        api.nft_transfer.v1.GetSupportedChainsReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: uint32
+                message:
+                    type: string
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.nft_transfer.v1.ChainInfo'
         api.nft_transfer.v1.GetTransferNftReply:
             type: object
             properties:

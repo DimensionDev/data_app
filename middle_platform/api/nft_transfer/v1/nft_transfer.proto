@@ -64,7 +64,14 @@ service NftTransfer {
 			get: "/v1/nfttransfer/whitelist/collections"
 		};
 	};
+
+	rpc GetSupportedChains (GetSupportedChainsRequest) returns (GetSupportedChainsReply) {
+		option (google.api.http) = {
+			get: "/v1/nfttransfer/supported-chains"
+		};
+	};
 }
+
 message PostReportAccountMuteRequest {
 	string account_id = 1;
 	string collection_id = 2;
@@ -243,4 +250,17 @@ message ListWhitelistCollectionsReply {
 	uint32 limit = 3[json_name = "page_size"];
 	uint64 total = 4;
 	repeated WhitelistCollection data = 5;
+}
+
+message GetSupportedChainsRequest {
+}
+
+message ChainInfo {
+	string name = 1;      // Chain name (e.g., "Ethereum")
+}
+
+message GetSupportedChainsReply {
+	uint32 code = 1;
+	string message = 2;
+	repeated ChainInfo data = 3;
 }

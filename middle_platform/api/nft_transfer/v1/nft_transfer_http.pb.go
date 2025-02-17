@@ -23,6 +23,7 @@ const OperationNftTransferAddWhitelistCollection = "/api.nft_transfer.v1.NftTran
 const OperationNftTransferDeleteWhitelistCollection = "/api.nft_transfer.v1.NftTransfer/DeleteWhitelistCollection"
 const OperationNftTransferGetNftTransfer = "/api.nft_transfer.v1.NftTransfer/GetNftTransfer"
 const OperationNftTransferGetReportSpam = "/api.nft_transfer.v1.NftTransfer/GetReportSpam"
+const OperationNftTransferGetSupportedChains = "/api.nft_transfer.v1.NftTransfer/GetSupportedChains"
 const OperationNftTransferGetTransferNft = "/api.nft_transfer.v1.NftTransfer/GetTransferNft"
 const OperationNftTransferListWhitelistCollections = "/api.nft_transfer.v1.NftTransfer/ListWhitelistCollections"
 const OperationNftTransferPostReportAccountMute = "/api.nft_transfer.v1.NftTransfer/PostReportAccountMute"
@@ -33,6 +34,7 @@ type NftTransferHTTPServer interface {
 	DeleteWhitelistCollection(context.Context, *DeleteWhitelistCollectionRequest) (*DeleteWhitelistCollectionReply, error)
 	GetNftTransfer(context.Context, *GetNftTransferRequest) (*GetNftTransferReply, error)
 	GetReportSpam(context.Context, *GetReportSpamRequest) (*GetReportSpamReply, error)
+	GetSupportedChains(context.Context, *GetSupportedChainsRequest) (*GetSupportedChainsReply, error)
 	GetTransferNft(context.Context, *GetTransferNftRequest) (*GetTransferNftReply, error)
 	ListWhitelistCollections(context.Context, *ListWhitelistCollectionsRequest) (*ListWhitelistCollectionsReply, error)
 	PostReportAccountMute(context.Context, *PostReportAccountMuteRequest) (*PostReportAccountMuteReply, error)
@@ -50,6 +52,7 @@ func RegisterNftTransferHTTPServer(s *http.Server, srv NftTransferHTTPServer) {
 	r.POST("/v1/nfttransfer/whitelist/collection", _NftTransfer_AddWhitelistCollection0_HTTP_Handler(srv))
 	r.DELETE("/v1/nfttransfer/whitelist/collection/{collection_id}", _NftTransfer_DeleteWhitelistCollection0_HTTP_Handler(srv))
 	r.GET("/v1/nfttransfer/whitelist/collections", _NftTransfer_ListWhitelistCollections0_HTTP_Handler(srv))
+	r.GET("/v1/nfttransfer/supported-chains", _NftTransfer_GetSupportedChains0_HTTP_Handler(srv))
 }
 
 func _NftTransfer_GetNftTransfer0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
@@ -226,11 +229,31 @@ func _NftTransfer_ListWhitelistCollections0_HTTP_Handler(srv NftTransferHTTPServ
 	}
 }
 
+func _NftTransfer_GetSupportedChains0_HTTP_Handler(srv NftTransferHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetSupportedChainsRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationNftTransferGetSupportedChains)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetSupportedChains(ctx, req.(*GetSupportedChainsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetSupportedChainsReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type NftTransferHTTPClient interface {
 	AddWhitelistCollection(ctx context.Context, req *AddWhitelistCollectionRequest, opts ...http.CallOption) (rsp *AddWhitelistCollectionReply, err error)
 	DeleteWhitelistCollection(ctx context.Context, req *DeleteWhitelistCollectionRequest, opts ...http.CallOption) (rsp *DeleteWhitelistCollectionReply, err error)
 	GetNftTransfer(ctx context.Context, req *GetNftTransferRequest, opts ...http.CallOption) (rsp *GetNftTransferReply, err error)
 	GetReportSpam(ctx context.Context, req *GetReportSpamRequest, opts ...http.CallOption) (rsp *GetReportSpamReply, err error)
+	GetSupportedChains(ctx context.Context, req *GetSupportedChainsRequest, opts ...http.CallOption) (rsp *GetSupportedChainsReply, err error)
 	GetTransferNft(ctx context.Context, req *GetTransferNftRequest, opts ...http.CallOption) (rsp *GetTransferNftReply, err error)
 	ListWhitelistCollections(ctx context.Context, req *ListWhitelistCollectionsRequest, opts ...http.CallOption) (rsp *ListWhitelistCollectionsReply, err error)
 	PostReportAccountMute(ctx context.Context, req *PostReportAccountMuteRequest, opts ...http.CallOption) (rsp *PostReportAccountMuteReply, err error)
@@ -289,6 +312,19 @@ func (c *NftTransferHTTPClientImpl) GetReportSpam(ctx context.Context, in *GetRe
 	pattern := "/v1/nfts/report/spam"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationNftTransferGetReportSpam))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, err
+}
+
+func (c *NftTransferHTTPClientImpl) GetSupportedChains(ctx context.Context, in *GetSupportedChainsRequest, opts ...http.CallOption) (*GetSupportedChainsReply, error) {
+	var out GetSupportedChainsReply
+	pattern := "/v1/nfttransfer/supported-chains"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationNftTransferGetSupportedChains))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
