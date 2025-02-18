@@ -325,6 +325,12 @@ components:
                     type: string
                 description:
                     type: string
+                chain:
+                    type: string
+                address:
+                    type: string
+                createBy:
+                    type: string
         api.nft_transfer.v1.ChainInfo:
             type: object
             properties:
@@ -571,6 +577,12 @@ components:
                 updatedAt:
                     type: string
                 description:
+                    type: string
+                chain:
+                    type: string
+                address:
+                    type: string
+                createBy:
                     type: string
         exchange_rate.v1.BaseCurrencyReply:
             type: object

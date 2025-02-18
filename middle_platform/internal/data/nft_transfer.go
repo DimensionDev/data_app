@@ -1350,21 +1350,33 @@ func (r *NftTransferRepo) AddWhitelistCollection(ctx context.Context, req *pb.Ad
 	}
 
 	now := time.Now()
-	var description sql.NullString
+
+	// Prepare optional fields
+	var description, chain, address, createBy sql.NullString
+
 	if req.Description != nil {
-		description = sql.NullString{String: *req.Description, Valid: *req.Description != ""}
-	} else {
-		description = sql.NullString{Valid: false}
+		description = sql.NullString{String: *req.Description, Valid: true}
+	}
+	if req.Chain != nil {
+		chain = sql.NullString{String: *req.Chain, Valid: true}
+	}
+	if req.Address != nil {
+		address = sql.NullString{String: *req.Address, Valid: true}
+	}
+	if req.CreateBy != nil {
+		createBy = sql.NullString{String: *req.CreateBy, Valid: true}
 	}
 
 	query := fmt.Sprintf(
-		"INSERT INTO nft_whitelist_collections (collection_id, created_at, updated_at, description) VALUES ('%s', '%s', '%s', '%s')",
-		req.CollectionId, now.Format(time.RFC3339), now.Format(time.RFC3339), description.String,
+		"INSERT INTO nft_whitelist_collections (collection_id, created_at, updated_at, description, chain, address, create_by) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+		req.CollectionId,
+		now.Format(time.RFC3339),
+		now.Format(time.RFC3339),
+		description.String,
+		chain.String,
+		address.String,
+		createBy.String,
 	)
-
-	// // Create a new context with timeout
-	// newCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	// defer cancel()
 
 	_, err := r.data.data_query(query)
 	if err != nil {
@@ -1379,6 +1391,9 @@ func (r *NftTransferRepo) AddWhitelistCollection(ctx context.Context, req *pb.Ad
 			CreatedAt:    now.Format(time.RFC3339),
 			UpdatedAt:    now.Format(time.RFC3339),
 			Description:  req.Description,
+			Chain:        req.Chain,
+			Address:      req.Address,
+			CreateBy:     req.CreateBy,
 		},
 	}, nil
 }
@@ -1434,12 +1449,11 @@ func (r *NftTransferRepo) ListWhitelistCollections(ctx context.Context, req *pb.
 	}
 	fmt.Printf("Total count: %d\n", total)
 
-	// Get paginated results
+	// Get paginated results with new fields
 	query := fmt.Sprintf(
-		"SELECT collection_id, created_at, updated_at, description FROM nft_whitelist_collections ORDER BY created_at DESC LIMIT %d OFFSET %d",
+		"SELECT collection_id, created_at, updated_at, description, chain, address, create_by FROM nft_whitelist_collections ORDER BY created_at DESC LIMIT %d OFFSET %d",
 		limit, offset,
 	)
-	fmt.Printf("Query: %s\n", query)
 
 	rows, err := r.data.data_query(query)
 	if err != nil {
@@ -1452,30 +1466,37 @@ func (r *NftTransferRepo) ListWhitelistCollections(ctx context.Context, req *pb.
 		var collectionID string
 		var createdAt []uint8
 		var updatedAt []uint8
-		var description sql.NullString
+		var description, chain, address, createBy sql.NullString
 
-		err := rows.Scan(&collectionID, &createdAt, &updatedAt, &description)
+		err := rows.Scan(&collectionID, &createdAt, &updatedAt, &description, &chain, &address, &createBy)
 		if err != nil {
-			fmt.Printf("Error scanning row: %v\n", err)
 			return nil, fmt.Errorf("failed to scan whitelist collection: %v", err)
 		}
 
 		// Parse timestamps
 		createdTime, err := time.Parse(time.DateTime, string(createdAt))
 		if err != nil {
-			fmt.Printf("Error parsing created_at: %v\n", err)
 			continue
 		}
 
 		updatedTime, err := time.Parse(time.DateTime, string(updatedAt))
 		if err != nil {
-			fmt.Printf("Error parsing updated_at: %v\n", err)
 			continue
 		}
 
-		var desc *string
+		// Handle optional fields
+		var desc, chainPtr, addressPtr, createByPtr *string
 		if description.Valid {
 			desc = &description.String
+		}
+		if chain.Valid {
+			chainPtr = &chain.String
+		}
+		if address.Valid {
+			addressPtr = &address.String
+		}
+		if createBy.Valid {
+			createByPtr = &createBy.String
 		}
 
 		collection := &pb.WhitelistCollection{
@@ -1483,9 +1504,11 @@ func (r *NftTransferRepo) ListWhitelistCollections(ctx context.Context, req *pb.
 			CreatedAt:    createdTime.Format(time.RFC3339),
 			UpdatedAt:    updatedTime.Format(time.RFC3339),
 			Description:  desc,
+			Chain:        chainPtr,
+			Address:      addressPtr,
+			CreateBy:     createByPtr,
 		}
 
-		fmt.Printf("Adding collection to result: %+v\n", collection)
 		collections = append(collections, collection)
 	}
 
