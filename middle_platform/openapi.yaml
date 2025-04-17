@@ -527,6 +527,8 @@ components:
                     type: string
                 updateBy:
                     type: string
+                dataSource:
+                    type: string
         api.nft_transfer.v1.SpamReport:
             type: object
             properties:

@@ -8,8 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	_ "github.com/go-sql-driver/mysql"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-redis/redis/v8"
@@ -126,10 +127,8 @@ func (r *Data) data_query(str_sql string) (*sql.Rows, error) {
 }
 
 func (r *Data) data_query_single(str_sql string) (*sql.Row, error) {
-
-	row := r.DataBaseCli.QueryRowContext(context.Background(), str_sql)
-
-	return row, nil
+	// QueryRowContext本身不返回error，错误会在调用Scan时返回
+	return r.DataBaseCli.QueryRowContext(context.Background(), str_sql), nil
 }
 
 func NewRedis(c *conf.Data, logger log.Logger) (*redis.Client, func(), error) {
