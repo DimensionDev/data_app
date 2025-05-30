@@ -551,8 +551,18 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 	next_status := req.Status
 	req_source := req.Source
 	var source string
+	if req_source == nil {
+		source = "firefly"
+	} else {
+		source = *req_source
+		sources := []string{"firefly", "mask-network", "web3bio"}
+		if !containsString(sources, source) {
+			fmt.Println("source:", source)
+			return nil, fmt.Errorf("value of source field should be in %s", sources)
+		}
+	}
 
-	return r.reportSpamV2(collection_id, req_source, req.CreateBy, req.UpdateBy, next_status)
+	return r.reportSpamV2(collection_id, &source, req.CreateBy, req.UpdateBy, next_status)
 	// data_source := req.DataSource
 	// if data_source != nil && *data_source == "nftscan" {
 	// 	return r.reportSpamV2(collection_id, req_source, req.CreateBy, req.UpdateBy, next_status)
