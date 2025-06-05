@@ -338,35 +338,25 @@ func reportSpamToNftScan(collection_id string) error {
 
 }
 
-func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string, create_by *string, update_by *string) (*pb.PostReportSpamReply, error) {
-
-	// Call NFTScan API
-	report_err := reportSpamToNftScan(collection_id)
-	if report_err != nil {
-		log.Errorf("Failed to report spam to NFTScan for collection %s: %v", collection_id, report_err)
+func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string, create_by *string, update_by *string, status string) (*pb.PostReportSpamReply, error) {
+	if status != "reporting" && status != "approved" && status != "rejected" {
 		return &pb.PostReportSpamReply{
-			Code:    500,
-			Message: fmt.Sprintf("Failed to report to NFTScan: %v", report_err),
+			Code:    400,
+			Message: "value of status should be in ['reporting','approved','rejected']",
 			Data:    nil,
 		}, nil
 	}
 
-	// Status is always 'approved' after NFTScan call as per requirement
-	final_status := "approved"
-
-	// Concatenate source
+	final_status := status
 	var final_source string
 	if req_source != nil && *req_source != "" {
-		final_source = *req_source + ":nftscan" // Explicitly add :nftscan
+		final_source = *req_source + ":nftscan"
 	} else {
 		final_source = "nftscan"
 	}
 
 	nowUTC := time.Now().UTC()
-	// update_at is always set to now
 	update_at := nowUTC.Format(time.RFC3339)
-
-	// Use pointer checks and assign strings for DB
 	var createByStr, updateByStr string
 	if create_by != nil {
 		createByStr = *create_by
@@ -375,18 +365,17 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 		updateByStr = *update_by
 	}
 
-	// 先查询是否存在记录
-	fmt.Println("collection_id:", collection_id)
-	query_str := fmt.Sprintf("SELECT collection_id, status, create_at, update_at, source, create_by, update_by FROM spam_report WHERE collection_id = '%s'", collection_id)
+	query_str := fmt.Sprintf("SELECT collection_id, status, create_at, update_at, source, create_by, update_by FROM spam_report WHERE collection_id = '%s' ORDER BY update_at DESC LIMIT 1", collection_id)
 	existing_res, query_err := r.data.data_query_single(query_str)
 
 	var insert_str string
+	var create_at_str string
+	var prev_status string
+	var prev_create_by string
+	var prev_create_at string
+	var hasRecord bool
 
-	// 当查询失败或记录不存在时，直接插入新记录
-	if query_err != nil || existing_res == nil {
-		log.Warnf("No existing record found or query error for collection %s: %v, will insert new record", collection_id, query_err)
-	} else {
-		// 如果记录已存在，只更新 update_at 和 update_by
+	if query_err == nil && existing_res != nil {
 		type existingReport struct {
 			collection_id string
 			status        string
@@ -397,81 +386,108 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 			update_by     sql.NullString
 		}
 		var exRt existingReport
-		if err := existing_res.Scan(&exRt.collection_id, &exRt.status, &exRt.create_at, &exRt.update_at, &exRt.source, &exRt.create_by, &exRt.update_by); err != nil {
-			log.Errorf("Failed to scan existing report for %s: %v", collection_id, err)
-			if err.Error() == "sql: no rows in result set" {
-				log.Warnf("no record found for collection %s: %v, will insert new record", collection_id, query_err)
-				create_at := update_at // 新记录时 create_at 设置为当前时间
-				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
-					collection_id, final_status, create_at, update_at, final_source, createByStr, updateByStr)
-			} else {
-				return &pb.PostReportSpamReply{
-					Code:    500,
-					Message: fmt.Sprintf("Failed to scan existing record: %v", err),
-					Data:    nil,
-				}, nil
-			}
-
-		} else {
-			// 保留原有创建时间
-			create_at_str := string(exRt.create_at)
-			// 保留原有状态和来源
-			existing_status := exRt.status
-			var existing_source string
-			if exRt.source.Valid {
-				existing_source = exRt.source.String
-			} else {
-				existing_source = ""
-			}
-			// 保留原有创建者
-			var existing_create_by string
+		if err := existing_res.Scan(&exRt.collection_id, &exRt.status, &exRt.create_at, &exRt.update_at, &exRt.source, &exRt.create_by, &exRt.update_by); err == nil {
+			hasRecord = true
+			prev_status = exRt.status
+			prev_create_at = string(exRt.create_at)
 			if exRt.create_by.Valid {
-				existing_create_by = exRt.create_by.String
-			} else {
-				existing_create_by = ""
+				prev_create_by = exRt.create_by.String
 			}
-
-			// 删除旧记录并插入新记录(模拟更新)
-			delete_str := fmt.Sprintf("DELETE FROM spam_report WHERE collection_id = '%s'", collection_id)
-			_, del_err := r.data.data_query(delete_str)
-			if del_err != nil {
-				log.Errorf("Failed to delete existing report for %s: %v", collection_id, del_err)
-				return &pb.PostReportSpamReply{
-					Code:    500,
-					Message: fmt.Sprintf("Failed to delete existing record: %v", del_err),
-					Data:    nil,
-				}, nil
-			}
-
-			// 插入新记录，保留原始的 create_at, status, source, create_by，只更新 update_at 和 update_by
-			insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
-				collection_id, existing_status, create_at_str, update_at, existing_source, existing_create_by, updateByStr)
+		} else {
+			hasRecord = false
 		}
 	}
 
-	// 执行最终的插入操作
-	insert_err := InsertIntoSpamReportTable(r, insert_str)
-	if insert_err != nil {
-		return &pb.PostReportSpamReply{
-			Code:    500,
-			Message: fmt.Sprintf("DB operation failed: %v", insert_err),
-			Data:    nil,
-		}, nil
+	if hasRecord {
+		if prev_status == "reporting" {
+			if final_status == "reporting" {
+				// 只更新 update_at 和 update_by
+				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
+					collection_id, prev_status, prev_create_at, update_at, final_source, prev_create_by, updateByStr)
+			} else if final_status == "approved" {
+				// 只有 approved 时才调用 reportSpamToNftScan
+				report_err := reportSpamToNftScan(collection_id)
+				if report_err != nil {
+					log.Errorf("Failed to report spam to NFTScan for collection %s: %v", collection_id, report_err)
+					return &pb.PostReportSpamReply{
+						Code:    500,
+						Message: fmt.Sprintf("Failed to report to NFTScan: %v", report_err),
+						Data:    nil,
+					}, nil
+				}
+				create_at_str = prev_create_at
+				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
+					collection_id, final_status, create_at_str, update_at, final_source, prev_create_by, updateByStr)
+			} else if final_status == "rejected" {
+				create_at_str = prev_create_at
+				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
+					collection_id, final_status, create_at_str, update_at, final_source, prev_create_by, updateByStr)
+			}
+		} else if prev_status == "rejected" {
+			if final_status == "reporting" {
+				// rejected 可以再次 reporting，插入新 reporting 记录
+				create_at_str = update_at
+				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
+					collection_id, final_status, create_at_str, update_at, final_source, createByStr, updateByStr)
+			} else {
+				// rejected 状态不能流转到非 reporting
+				return &pb.PostReportSpamReply{
+					Code:    400,
+					Message: "Cannot change status from rejected to non-reporting state.",
+					Data:    nil,
+				}, nil
+			}
+		} else if prev_status == "approved" {
+			if final_status == "reporting" {
+				return &pb.PostReportSpamReply{
+					Code:    400,
+					Message: "Cannot reporting, already in approved state.",
+					Data:    nil,
+				}, nil
+			}
+			// approved -> approved/rejected 不允许
+			return &pb.PostReportSpamReply{
+				Code:    400,
+				Message: "Already in approved state.",
+				Data:    nil,
+			}, nil
+		}
+	} else {
+		// 无记录，只能 reporting
+		if final_status != "reporting" {
+			return &pb.PostReportSpamReply{
+				Code:    400,
+				Message: "First report must be reporting.",
+				Data:    nil,
+			}, nil
+		}
+		create_at_str = update_at
+		insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
+			collection_id, final_status, create_at_str, update_at, final_source, createByStr, updateByStr)
 	}
 
-	// 重新获取记录以返回最新状态
-	final_query_str := fmt.Sprintf("SELECT collection_id, status, create_at, update_at, source, create_by, update_by FROM spam_report WHERE collection_id = '%s'", collection_id)
+	if insert_str != "" {
+		insert_err := InsertIntoSpamReportTable(r, insert_str)
+		if insert_err != nil {
+			return &pb.PostReportSpamReply{
+				Code:    500,
+				Message: fmt.Sprintf("DB operation failed: %v", insert_err),
+				Data:    nil,
+			}, nil
+		}
+	}
+
+	final_query_str := fmt.Sprintf("SELECT collection_id, status, create_at, update_at, source, create_by, update_by FROM spam_report WHERE collection_id = '%s' ORDER BY update_at DESC LIMIT 1", collection_id)
 	final_res, final_err := r.data.data_query_single(final_query_str)
 	if final_err != nil {
 		log.Errorf("Failed to fetch final spam report for %s: %v", collection_id, final_err)
 		return &pb.PostReportSpamReply{
 			Code:    200,
-			Message: "Reported via NFTScan and DB updated, but failed to fetch final state.",
+			Message: "Reported and DB updated, but failed to fetch final state.",
 			Data:    nil,
 		}, nil
 	}
 
-	// 解析最终结果
 	var fetched_report pb.SpamReport
 	type dbReport struct {
 		collection_id string
@@ -494,15 +510,10 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 
 	fetched_report.CollectionId = dbRt.collection_id
 	fetched_report.Status = dbRt.status
-
-	// Format create_at
 	createAtStr := formatDbTimestamp(dbRt.created_at)
 	fetched_report.CreateAt = &createAtStr
-
-	// Format update_at
 	updateAtStr := formatDbTimestamp(dbRt.updated_at)
 	fetched_report.UpdateAt = &updateAtStr
-
 	if dbRt.source.Valid {
 		srcStr := dbRt.source.String
 		fetched_report.Source = &srcStr
@@ -518,7 +529,7 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 
 	return &pb.PostReportSpamReply{
 		Code:    200,
-		Message: "Reported via NFTScan and database updated.",
+		Message: "Reported and database updated.",
 		Data:    &fetched_report,
 	}, nil
 }
@@ -540,11 +551,22 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 	next_status := req.Status
 	req_source := req.Source
 	var source string
-
-	data_source := req.DataSource
-	if data_source != nil && *data_source == "nftscan" {
-		return r.reportSpamV2(collection_id, req_source, req.CreateBy, req.UpdateBy)
+	if req_source == nil {
+		source = "firefly"
+	} else {
+		source = *req_source
+		sources := []string{"firefly", "mask-network", "web3bio"}
+		if !containsString(sources, source) {
+			fmt.Println("source:", source)
+			return nil, fmt.Errorf("value of source field should be in %s", sources)
+		}
 	}
+
+	return r.reportSpamV2(collection_id, &source, req.CreateBy, req.UpdateBy, next_status)
+	// data_source := req.DataSource
+	// if data_source != nil && *data_source == "nftscan" {
+	// 	return r.reportSpamV2(collection_id, req_source, req.CreateBy, req.UpdateBy, next_status)
+	// }
 
 	// 查找先前的 report 记录
 	query_str := fmt.Sprintf("select status,create_at,source,create_by,update_by from spam_report where collection_id = '%s'", collection_id)
