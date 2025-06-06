@@ -551,7 +551,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 	next_status := req.Status
 	req_source := req.Source
 	var source string
-	if req_source == nil {
+	if req_source == nil || *req_source == "" {
 		source = "firefly"
 	} else {
 		source = *req_source
