@@ -776,9 +776,9 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		status        string
 		created_at    []uint8
 		update_at     []uint8
-		source        string
-		create_by     *string
-		update_by     *string
+		source        sql.NullString
+		create_by     sql.NullString
+		update_by     sql.NullString
 	}
 	var rt report
 	for res.Next() {
@@ -807,10 +807,27 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 			update_at = parsedUpdateTime.Format(targetLayout)
 		}
 		spam_report.UpdateAt = &update_at
-		reply_source := rt.source
-		spam_report.Source = &reply_source
-		spam_report.CreateBy = rt.create_by
-		spam_report.UpdateBy = rt.update_by
+		if rt.source.Valid {
+			srcStr := rt.source.String
+			spam_report.Source = &srcStr
+		}
+		if rt.create_by.Valid {
+			cbStr := rt.create_by.String
+			spam_report.CreateBy = &cbStr
+		}
+		if rt.update_by.Valid {
+			ubStr := rt.update_by.String
+			spam_report.UpdateBy = &ubStr
+		}
+
+		// 查询 spam_collection_info 表，填充 name, collection_url, detail 字段
+		name, collectionURL, detail, err := r.getSpamCollectionInfo(rt.collection_id)
+		if err == nil {
+			spam_report.Name = name
+			spam_report.CollectionUrl = collectionURL
+			spam_report.Detail = detail
+		}
+
 		report_list = append(report_list, &spam_report)
 	}
 
@@ -1666,4 +1683,27 @@ func (r *NftTransferRepo) IsCollectionWhitelisted(ctx context.Context, collectio
 	}
 
 	return exists, nil
+}
+
+// 获取 spam_collection_info 的 name, collection_url, detail 字段
+func (r *NftTransferRepo) getSpamCollectionInfo(collectionID string) (name, collectionURL, detail *string, err error) {
+	query := fmt.Sprintf("SELECT name, collection_url, detail FROM spam_collection_info WHERE collection_id = '%s' LIMIT 1", collectionID)
+	row, err := r.data.data_query_single(query)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	var n, url, d sql.NullString
+	if err := row.Scan(&n, &url, &d); err != nil {
+		return nil, nil, nil, err
+	}
+	if n.Valid {
+		name = &n.String
+	}
+	if url.Valid {
+		collectionURL = &url.String
+	}
+	if d.Valid {
+		detail = &d.String
+	}
+	return name, collectionURL, detail, nil
 }

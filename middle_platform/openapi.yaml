@@ -548,6 +548,12 @@ components:
                     type: string
                 update_by:
                     type: string
+                name:
+                    type: string
+                collectionUrl:
+                    type: string
+                detail:
+                    type: string
         api.nft_transfer.v1.TransferNft:
             type: object
             properties:

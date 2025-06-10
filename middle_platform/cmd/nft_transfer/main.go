@@ -50,7 +50,7 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
 }
 
 func main() {
-	env_err := godotenv.Load()
+	env_err := godotenv.Load("../../.env")
 	if env_err != nil {
 		fmt.Println("Error loading .env file", env_err)
 	}
