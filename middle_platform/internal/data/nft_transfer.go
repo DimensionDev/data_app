@@ -338,7 +338,7 @@ func reportSpamToNftScan(collection_id string) error {
 
 }
 
-func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string, create_by *string, update_by *string, status string) (*pb.PostReportSpamReply, error) {
+func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string, create_by *string, update_by *string, status string, collectionInfo *string) (*pb.PostReportSpamReply, error) {
 	if status != "reporting" && status != "approved" && status != "rejected" {
 		return &pb.PostReportSpamReply{
 			Code:    400,
@@ -527,6 +527,9 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 		fetched_report.UpdateBy = &ubStr
 	}
 
+	// 在 status==reporting 时解析 collection_info 并写入 spam_collection_info
+	insertSpamCollectionInfoIfPresent(r, collection_id, status, collectionInfo)
+
 	return &pb.PostReportSpamReply{
 		Code:    200,
 		Message: "Reported and database updated.",
@@ -562,216 +565,76 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 		}
 	}
 
-	return r.reportSpamV2(collection_id, &source, req.CreateBy, req.UpdateBy, next_status)
-	// data_source := req.DataSource
-	// if data_source != nil && *data_source == "nftscan" {
-	// 	return r.reportSpamV2(collection_id, req_source, req.CreateBy, req.UpdateBy, next_status)
-	// }
+	return r.reportSpamV2(collection_id, &source, req.CreateBy, req.UpdateBy, next_status, req.CollectionInfo)
+}
 
-	// 查找先前的 report 记录
-	query_str := fmt.Sprintf("select status,create_at,source,create_by,update_by from spam_report where collection_id = '%s'", collection_id)
-	res, err := r.data.data_query_single(query_str)
+// 在 status==reporting 时解析 collection_info 并写入 spam_collection_info
+func insertSpamCollectionInfoIfPresent(r *NftTransferRepo, collectionID string, status string, collectionInfo *string) {
+	if status != "reporting" || collectionInfo == nil || *collectionInfo == "" {
+		return
+	}
+	var infoMap map[string]interface{}
+	err := json.Unmarshal([]byte(*collectionInfo), &infoMap)
 	if err != nil {
-		fmt.Println("post spam report fail", collection_id, next_status)
-		return nil, err
+		return
 	}
-
-	var rt report
-	if res != nil {
-		if err := res.Scan(&rt.status, &rt.create_at, &rt.source, &rt.create_by, &rt.update_by); err != nil {
-			fmt.Println(err.Error())
-			if err.Error() == "sql: no rows in result set" {
-				res = nil
-			} else {
-				fmt.Printf("error = %v", err)
-				return nil, err
-			}
+	var name, collectionURL, detail *string
+	if v, ok := infoMap["name"]; ok {
+		if s, ok := v.(string); ok {
+			name = &s
 		}
 	}
-
-	fmt.Println("rt:", rt)
-
-	const targetLayout = "2006-01-02T15:04:05Z"
-	if next_status == "reporting" {
-		if req_source == nil {
-			source = "firefly"
-		} else {
-			source = *req_source
-			sources := []string{"firefly", "mask-network", "web3bio"}
-			if !containsString(sources, source) {
-				fmt.Println("source:", source)
-				return nil, fmt.Errorf("value of source field should be in %s", sources)
-			}
+	if v, ok := infoMap["collection_url"]; ok {
+		if s, ok := v.(string); ok {
+			collectionURL = &s
 		}
-		// 检查 collection 是否已经被report
-		if res != nil {
-			create_at, err := time.Parse(time.DateTime, string(rt.create_at))
-			if err != nil {
-				fmt.Println("解析时间时出错:", err)
-				return nil, fmt.Errorf("解析时间时出错: %w", err)
-			}
-			if rt.status == next_status || rt.status == "rejected" {
-				create_at_str := create_at.Format(targetLayout)
-				update_at := time.Now().UTC().Format(targetLayout)
-				update_by := req.UpdateBy
-				var createByStr string
-				if rt.create_by != nil {
-					createByStr = *rt.create_by
-				}
-				var updateByStr string
-				if update_by != nil {
-					updateByStr = *update_by
-				}
-				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s','%s','%s')",
-					collection_id, next_status, create_at_str, update_at, rt.source,
-					createByStr, updateByStr)
-				insert_err := InsertIntoSpamReportTable(r, insert_str)
-				if insert_err != nil {
-					return nil, insert_err
-				}
-				data := pb.SpamReport{
-					CollectionId: collection_id,
-					Status:       next_status,
-					CreateAt:     &create_at_str,
-					UpdateAt:     &update_at,
-					Source:       &source,
-					CreateBy:     &createByStr,
-					UpdateBy:     &updateByStr,
-				}
-				return &pb.PostReportSpamReply{
-					Code:    200,
-					Message: "",
-					Data:    &data,
-				}, nil
-			} else {
-				return &pb.PostReportSpamReply{
-					Code:    400,
-					Message: fmt.Sprintf("this report of %s is already %s", collection_id, rt.status),
-					Data:    nil,
-				}, nil
-			}
-		} else {
-			create_at := time.Now().UTC().Format(targetLayout)
-			update_at := create_at
-			create_by := req.CreateBy
-			update_by := req.UpdateBy
-			var createByStr string
-			if create_by != nil {
-				createByStr = *create_by
-			}
-			var updateByStr string
-			if update_by != nil {
-				updateByStr = *update_by
-			}
-			insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s','%s','%s')",
-				collection_id, next_status, create_at, update_at, source, createByStr, updateByStr)
-			insert_err := InsertIntoSpamReportTable(r, insert_str)
-			if insert_err != nil {
-				return nil, insert_err
-			}
-			data := pb.SpamReport{
-				CollectionId: collection_id,
-				Status:       next_status,
-				CreateAt:     &create_at,
-				UpdateAt:     &update_at,
-				Source:       &source,
-				CreateBy:     create_by,
-				UpdateBy:     update_by,
-			}
-			return &pb.PostReportSpamReply{
-				Code:    200,
-				Message: "",
-				Data:    &data,
-			}, nil
-		}
-	} else if next_status == "approved" || next_status == "rejected" {
-		if res != nil {
-			create_at, err := time.Parse(time.DateTime, string(rt.create_at))
-			if err != nil {
-				fmt.Println("解析时间时出错:", err)
-				return nil, fmt.Errorf("解析时间时出错: %w", err)
-			}
-			fmt.Println(res)
-			if rt.status == "reporting" {
-				update_at := time.Now().UTC().Format(targetLayout)
-				create_at_str := create_at.Format(targetLayout)
-
-				// 更新 collection 的 spam_score
-				if next_status == "approved" {
-					report_err := reportSpamToSimpleHash(collection_id)
-					if report_err != nil {
-						return &pb.PostReportSpamReply{
-							Code:    500,
-							Message: report_err.Error(),
-							Data:    nil,
-						}, nil
-					}
-					err := UpdataCollectionSpamScore(r, collection_id)
-					if err != nil {
-						return &pb.PostReportSpamReply{
-							Code:    500,
-							Message: err.Error(),
-							Data:    nil,
-						}, nil
-					}
-				}
-
-				reply_source := rt.source
-				var createBy, updateBy string
-				if rt.create_by != nil {
-					createBy = *rt.create_by
-				} else {
-					createBy = ""
-				}
-				if req.UpdateBy != nil {
-					updateBy = *req.UpdateBy
-				} else {
-					updateBy = ""
-				}
-				insert_str := fmt.Sprintf("insert into spam_report values ('%s','%s','%s','%s','%s','%s','%s')", collection_id, next_status, create_at_str, update_at, reply_source, createBy, updateBy)
-				insert_err := InsertIntoSpamReportTable(r, insert_str)
-				if insert_err != nil {
-					return &pb.PostReportSpamReply{
-						Code:    500,
-						Message: insert_err.Error(),
-						Data:    nil,
-					}, nil
-				}
-				data := pb.SpamReport{
-					CollectionId: collection_id,
-					Status:       next_status,
-					CreateAt:     &create_at_str,
-					UpdateAt:     &update_at,
-					Source:       &reply_source,
-					CreateBy:     rt.create_by,
-					UpdateBy:     req.UpdateBy,
-				}
-				return &pb.PostReportSpamReply{
-					Code:    200,
-					Message: "",
-					Data:    &data,
-				}, nil
-			} else {
-				return &pb.PostReportSpamReply{
-					Code:    400,
-					Message: fmt.Sprintf("this report of %s is already %s", collection_id, rt.status),
-					Data:    nil,
-				}, nil
-			}
-		} else {
-			return &pb.PostReportSpamReply{
-				Code:    400,
-				Message: fmt.Sprintf("no collection of %s be reported before", collection_id),
-				Data:    nil,
-			}, nil
-		}
-	} else {
-		return &pb.PostReportSpamReply{
-			Code:    400,
-			Message: "value of status should be in ['reporting','approved','rejected']",
-			Data:    nil,
-		}, nil
 	}
+	if v, ok := infoMap["detail"]; ok {
+		if s, ok := v.(string); ok {
+			detail = &s
+		}
+	}
+	InsertIntoSpamCollectionInfoTable(r, collectionID, name, collectionURL, detail)
+}
+
+// Insert collection info into spam_collection_info table
+func InsertIntoSpamCollectionInfoTable(r *NftTransferRepo, collectionID string, name, collectionURL, detail *string) error {
+	// 先查是否已存在
+	checkQuery := fmt.Sprintf("SELECT count(*) AS cnt FROM spam_collection_info WHERE collection_id = '%s'", collectionID)
+	res, err := r.data.data_query_single(checkQuery)
+	if err != nil {
+		return fmt.Errorf("check spam_collection_info existence error: %s", err)
+	}
+	var cnt int
+	if err := res.Scan(&cnt); err != nil {
+		return fmt.Errorf("scan count error: %s", err)
+	}
+	if cnt > 0 {
+		fmt.Println("spam_collection_info already exists, skip insert.")
+		return nil
+	}
+	// 不存在则插入
+	insertStr := "INSERT INTO spam_collection_info (collection_id, name, collection_url, detail) VALUES ('%s', %s, %s, %s)"
+	nameVal := "NULL"
+	if name != nil && *name != "" {
+		nameVal = fmt.Sprintf("'%s'", *name)
+	}
+	urlVal := "NULL"
+	if collectionURL != nil && *collectionURL != "" {
+		urlVal = fmt.Sprintf("'%s'", *collectionURL)
+	}
+	detailVal := "NULL"
+	if detail != nil && *detail != "" {
+		detailVal = fmt.Sprintf("'%s'", *detail)
+	}
+	query := fmt.Sprintf(insertStr, collectionID, nameVal, urlVal, detailVal)
+	fmt.Println("insert spam_collection_info:", query)
+	insertRes, err := r.data.data_query(query)
+	if err != nil {
+		return fmt.Errorf("writing data into spam_collection_info error:%s", err)
+	}
+	defer insertRes.Close()
+	return nil
 }
 
 func InsertIntoSpamReportTable(r *NftTransferRepo, insert_str string) error {
