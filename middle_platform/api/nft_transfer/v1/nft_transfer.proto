@@ -125,6 +125,7 @@ message PostReportSpamRequest {
 	optional string create_by = 6;  // Format: "platform:{id/handle}" (e.g. "twitter:handle", "farcaster:handle", "lens:handle")
 	optional string update_by = 7;  // Format: same as create_by
 	optional string data_source = 8; // Default: simplehash, Enum: "nftscan"
+	optional string collection_info = 9; // JSON string for extra collection info
 }
 
 message PostReportSpamReply {
