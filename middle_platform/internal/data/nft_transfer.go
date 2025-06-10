@@ -539,7 +539,7 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 
 // Helper function to format DB timestamp bytes to RFC3339 string
 func formatDbTimestamp(dbTime []uint8) string {
-	const targetLayout = time.RFC3339
+	const targetLayout = "2006-01-02T15:04:05Z"
 	t, err := time.Parse(time.DateTime, string(dbTime)) // Assuming DB stores in 'YYYY-MM-DD HH:MM:SS'
 	if err != nil {
 		log.Warnf("Error parsing timestamp from DB: %v, raw: %s", err, string(dbTime))
@@ -769,20 +769,73 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	defer res.Close()
 	var report_list []*pb.SpamReport
 
-	// row := make([]interface{}, 0)
-	const targetLayout = "2006-01-02T15:04:05Z"
-	type report struct {
-		collection_id string
-		status        string
-		created_at    []uint8
-		update_at     []uint8
-		source        sql.NullString
-		create_by     sql.NullString
-		update_by     sql.NullString
-	}
-	var rt report
+	// 1. 收集所有collection_id
+	collectionIDSet := make(map[string]struct{})
+	var collectionIDs []string
 	for res.Next() {
-		if err := res.Scan(&rt.collection_id, &rt.status, &rt.created_at, &rt.update_at, &rt.source, &rt.create_by, &rt.update_by); err != nil {
+		var tmpID string
+		if err := res.Scan(&tmpID, new(string), new([]uint8), new([]uint8), new(sql.NullString), new(sql.NullString), new(sql.NullString)); err == nil {
+			if _, exists := collectionIDSet[tmpID]; !exists {
+				collectionIDSet[tmpID] = struct{}{}
+				collectionIDs = append(collectionIDs, tmpID)
+			}
+		}
+	}
+	// 重置游标
+	res.Close()
+	res, err = r.data.data_query(query_str)
+	if err != nil {
+		return &pb.GetReportSpamReply{
+			Code: 500,
+			Data: nil,
+		}, err
+	}
+	defer res.Close()
+
+	// 2. 批量查询spam_collection_info
+	infoMap := make(map[string]struct{ name, url, detail *string })
+	if len(collectionIDs) > 0 {
+		var sb strings.Builder
+		sb.WriteString("'")
+		sb.WriteString(strings.Join(collectionIDs, "','"))
+		sb.WriteString("'")
+		infoQuery := fmt.Sprintf("SELECT collection_id, name, collection_url, detail FROM spam_collection_info WHERE collection_id IN (%s)", sb.String())
+		rows, err := r.data.data_query(infoQuery)
+		if err == nil {
+			for rows.Next() {
+				var cid string
+				var n, u, d sql.NullString
+				if err := rows.Scan(&cid, &n, &u, &d); err == nil {
+					var namePtr, urlPtr, detailPtr *string
+					if n.Valid {
+						namePtr = &n.String
+					}
+					if u.Valid {
+						urlPtr = &u.String
+					}
+					if d.Valid {
+						detailPtr = &d.String
+					}
+					infoMap[cid] = struct{ name, url, detail *string }{namePtr, urlPtr, detailPtr}
+				}
+			}
+			rows.Close()
+		}
+	}
+
+	// 3. 正式组装结果
+	const targetLayout = "2006-01-02T15:04:05Z"
+	for res.Next() {
+		var rt struct {
+			collection_id string
+			status        string
+			create_at     []uint8
+			update_at     []uint8
+			source        sql.NullString
+			create_by     sql.NullString
+			update_by     sql.NullString
+		}
+		if err := res.Scan(&rt.collection_id, &rt.status, &rt.create_at, &rt.update_at, &rt.source, &rt.create_by, &rt.update_by); err != nil {
 			log.Error("failed to scan row err = ", err)
 			return nil, err
 		}
@@ -791,7 +844,7 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		var update_at string
 		spam_report.CollectionId = rt.collection_id
 		spam_report.Status = rt.status
-		parsedTime, err := time.Parse(time.DateTime, string(rt.created_at))
+		parsedTime, err := time.Parse(time.DateTime, string(rt.create_at))
 		if err != nil {
 			log.Error("无法解析创建时间:", err)
 			create_at = ""
@@ -819,15 +872,12 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 			ubStr := rt.update_by.String
 			spam_report.UpdateBy = &ubStr
 		}
-
-		// 查询 spam_collection_info 表，填充 name, collection_url, detail 字段
-		name, collectionURL, detail, err := r.getSpamCollectionInfo(rt.collection_id)
-		if err == nil {
-			spam_report.Name = name
-			spam_report.CollectionUrl = collectionURL
-			spam_report.Detail = detail
+		// 批量map取值
+		if info, ok := infoMap[rt.collection_id]; ok {
+			spam_report.Name = info.name
+			spam_report.CollectionUrl = info.url
+			spam_report.Detail = info.detail
 		}
-
 		report_list = append(report_list, &spam_report)
 	}
 
@@ -1692,15 +1742,15 @@ func (r *NftTransferRepo) getSpamCollectionInfo(collectionID string) (name, coll
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	var n, url, d sql.NullString
-	if err := row.Scan(&n, &url, &d); err != nil {
+	var n, u, d sql.NullString
+	if err := row.Scan(&n, &u, &d); err != nil {
 		return nil, nil, nil, err
 	}
 	if n.Valid {
 		name = &n.String
 	}
-	if url.Valid {
-		collectionURL = &url.String
+	if u.Valid {
+		collectionURL = &u.String
 	}
 	if d.Valid {
 		detail = &d.String

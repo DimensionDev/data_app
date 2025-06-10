@@ -550,7 +550,7 @@ components:
                     type: string
                 name:
                     type: string
-                collectionUrl:
+                collection_url:
                     type: string
                 detail:
                     type: string

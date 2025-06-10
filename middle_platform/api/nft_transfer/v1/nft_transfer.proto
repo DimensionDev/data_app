@@ -143,7 +143,7 @@ message SpamReport {
 	optional string create_by = 6[json_name = "create_by"];
 	optional string update_by = 7[json_name = "update_by"];
 	optional string name = 8;
-	optional string collection_url = 9;
+	optional string collection_url = 9[json_name = "collection_url"];
 	optional string detail = 10;
 }
 
