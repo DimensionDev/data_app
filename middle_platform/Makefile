@@ -54,9 +54,12 @@ build: $(GO_FILES) generate
 .PHONY: generate
 # generate
 generate:
+	go generate ./...
+
+.PHONY: deps
+deps:
 	go mod tidy
 	go get github.com/google/wire/cmd/wire@latest
-	go generate ./...
 
 .PHONY: all
 # generate all
