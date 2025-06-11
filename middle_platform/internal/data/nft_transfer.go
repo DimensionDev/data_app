@@ -611,10 +611,14 @@ func InsertIntoSpamCollectionInfoTable(r *NftTransferRepo, collectionID string, 
 		return fmt.Errorf("scan count error: %s", err)
 	}
 	if cnt > 0 {
-		fmt.Println("spam_collection_info already exists, skip insert.")
-		return nil
+		// 存在则先删除
+		deleteStr := "DELETE FROM spam_collection_info WHERE collection_id = ?"
+		_, err := r.data.DataBaseCli.ExecContext(context.Background(), deleteStr, collectionID)
+		if err != nil {
+			return fmt.Errorf("delete existing spam_collection_info error: %s", err)
+		}
 	}
-	// 不存在则插入
+	// 不存在则插入（或已删除，重新插入）
 	insertStr := "INSERT INTO spam_collection_info (collection_id, name, collection_url, detail) VALUES (?, ?, ?, ?)"
 
 	// 准备参数值
