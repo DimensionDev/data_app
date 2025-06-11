@@ -25,6 +25,8 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/bitly/go-simplejson"
 )
 
 type NftTransferRepo struct {
@@ -528,7 +530,13 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 	}
 
 	// 在 status==reporting 时解析 collection_info 并写入 spam_collection_info
-	insertSpamCollectionInfoIfPresent(r, collection_id, status, collectionInfo)
+	if err := insertSpamCollectionInfoIfPresent(r, collection_id, status, collectionInfo); err != nil {
+		return &pb.PostReportSpamReply{
+			Code:    500,
+			Message: "Reported but failed to insert spam_collection_info: " + err.Error(),
+			Data:    &fetched_report,
+		}, nil
+	}
 
 	return &pb.PostReportSpamReply{
 		Code:    200,
@@ -569,39 +577,52 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 }
 
 // 在 status==reporting 时解析 collection_info 并写入 spam_collection_info
-func insertSpamCollectionInfoIfPresent(r *NftTransferRepo, collectionID string, status string, collectionInfo *string) {
+func insertSpamCollectionInfoIfPresent(r *NftTransferRepo, collectionID string, status string, collectionInfo *string) error {
 	if status != "reporting" || collectionInfo == nil || *collectionInfo == "" {
-		return
+		return nil
 	}
-	var infoMap map[string]interface{}
-	err := json.Unmarshal([]byte(*collectionInfo), &infoMap)
+	js, err := simplejson.NewJson([]byte(*collectionInfo))
 	if err != nil {
-		fmt.Println("collectionInfo unmarshal failed:", err)
-		return
+		fmt.Println("collectionInfo simplejson parse failed:", err)
+		return err
 	}
 	var name, collectionURL, detail *string
-	if v, ok := infoMap["name"]; ok {
-		if s, ok := v.(string); ok {
-			name = &s
+	if n := js.Get("name"); n != nil && n.MustString() != "" {
+		s := n.MustString()
+		name = &s
+	}
+	if u := js.Get("collection_url"); u != nil && u.MustString() != "" {
+		s := u.MustString()
+		collectionURL = &s
+	}
+	if d := js.Get("detail"); d != nil {
+		if d.Interface() != nil {
+			switch v := d.Interface().(type) {
+			case string:
+				if subjs, err := simplejson.NewJson([]byte(v)); err == nil {
+					detailStr, _ := subjs.MarshalJSON()
+					detailStrVal := string(detailStr)
+					detail = &detailStrVal
+				} else {
+					detail = &v
+				}
+			default:
+				detailStr, _ := d.MarshalJSON()
+				detailStrVal := string(detailStr)
+				detail = &detailStrVal
+			}
 		}
 	}
-	if v, ok := infoMap["collection_url"]; ok {
-		if s, ok := v.(string); ok {
-			collectionURL = &s
-		}
-	}
-	if v, ok := infoMap["detail"]; ok {
-		if s, ok := v.(string); ok {
-			detail = &s
-		}
-	}
-	InsertIntoSpamCollectionInfoTable(r, collectionID, name, collectionURL, detail)
+	return InsertIntoSpamCollectionInfoTable(r, collectionID, name, collectionURL, detail)
 }
 
-// Insert collection info into spam_collection_info table
+func escapeSQLString(s string) string {
+	return strings.ReplaceAll(s, "'", "''")
+}
+
 func InsertIntoSpamCollectionInfoTable(r *NftTransferRepo, collectionID string, name, collectionURL, detail *string) error {
 	// 先查是否已存在
-	checkQuery := fmt.Sprintf("SELECT count(*) AS cnt FROM spam_collection_info WHERE collection_id = '%s'", collectionID)
+	checkQuery := fmt.Sprintf("SELECT count(*) AS cnt FROM spam_collection_info WHERE collection_id = '%s'", escapeSQLString(collectionID))
 	res, err := r.data.data_query_single(checkQuery)
 	if err != nil {
 		return fmt.Errorf("check spam_collection_info existence error: %s", err)
@@ -612,45 +633,34 @@ func InsertIntoSpamCollectionInfoTable(r *NftTransferRepo, collectionID string, 
 	}
 	if cnt > 0 {
 		// 存在则先删除
-		deleteStr := "DELETE FROM spam_collection_info WHERE collection_id = ?"
-		_, err := r.data.DataBaseCli.ExecContext(context.Background(), deleteStr, collectionID)
+		deleteStr := fmt.Sprintf("DELETE FROM spam_collection_info WHERE collection_id = '%s'", escapeSQLString(collectionID))
+		_, err := r.data.data_query(deleteStr)
 		if err != nil {
 			return fmt.Errorf("delete existing spam_collection_info error: %s", err)
 		}
 	}
 	// 不存在则插入（或已删除，重新插入）
-	insertStr := "INSERT INTO spam_collection_info (collection_id, name, collection_url, detail) VALUES (?, ?, ?, ?)"
-
-	// 准备参数值
-	params := []interface{}{collectionID}
-
-	// 处理 name
+	nameVal := "NULL"
 	if name != nil && *name != "" {
-		params = append(params, *name)
-	} else {
-		params = append(params, nil)
+		nameVal = fmt.Sprintf("'%s'", escapeSQLString(*name))
 	}
-
-	// 处理 collectionURL
+	urlVal := "NULL"
 	if collectionURL != nil && *collectionURL != "" {
-		params = append(params, *collectionURL)
-	} else {
-		params = append(params, nil)
+		urlVal = fmt.Sprintf("'%s'", escapeSQLString(*collectionURL))
 	}
-
-	// 处理 detail
+	detailVal := "NULL"
 	if detail != nil && *detail != "" {
-		params = append(params, *detail)
-	} else {
-		params = append(params, nil)
+		detailVal = fmt.Sprintf("'%s'", escapeSQLString(*detail))
 	}
-
-	// 使用参数化查询执行插入
-	_, err = r.data.DataBaseCli.ExecContext(context.Background(), insertStr, params...)
+	query := fmt.Sprintf(
+		"INSERT INTO spam_collection_info (collection_id, name, collection_url, detail) VALUES ('%s', %s, %s, %s)",
+		escapeSQLString(collectionID), nameVal, urlVal, detailVal,
+	)
+	_, err = r.data.data_query(query)
 	if err != nil {
+		fmt.Println("insertStr:", err)
 		return fmt.Errorf("writing data into spam_collection_info error: %s", err)
 	}
-
 	return nil
 }
 
