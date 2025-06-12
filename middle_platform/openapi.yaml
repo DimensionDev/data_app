@@ -529,6 +529,8 @@ components:
                     type: string
                 dataSource:
                     type: string
+                collectionInfo:
+                    type: string
         api.nft_transfer.v1.SpamReport:
             type: object
             properties:
@@ -545,6 +547,12 @@ components:
                 create_by:
                     type: string
                 update_by:
+                    type: string
+                name:
+                    type: string
+                collection_url:
+                    type: string
+                detail:
                     type: string
         api.nft_transfer.v1.TransferNft:
             type: object

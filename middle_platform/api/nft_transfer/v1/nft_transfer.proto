@@ -125,6 +125,7 @@ message PostReportSpamRequest {
 	optional string create_by = 6;  // Format: "platform:{id/handle}" (e.g. "twitter:handle", "farcaster:handle", "lens:handle")
 	optional string update_by = 7;  // Format: same as create_by
 	optional string data_source = 8; // Default: simplehash, Enum: "nftscan"
+	optional string collection_info = 9; // JSON string for extra collection info
 }
 
 message PostReportSpamReply {
@@ -139,8 +140,11 @@ message SpamReport {
 	optional string create_at = 3[json_name = "create_at"];
 	optional string update_at = 4[json_name = "update_at"];
 	optional string source = 5[json_name = "source"];
-	optional string create_by = 6[json_name = "create_by"];  // Format: "platform:{id/handle}" (e.g. "twitter:handle", "farcaster:handle", "lens:handle")
-	optional string update_by = 7[json_name = "update_by"];  // Format: same as create_by
+	optional string create_by = 6[json_name = "create_by"];
+	optional string update_by = 7[json_name = "update_by"];
+	optional string name = 8;
+	optional string collection_url = 9[json_name = "collection_url"];
+	optional string detail = 10;
 }
 
 message GetReportSpamRequest {

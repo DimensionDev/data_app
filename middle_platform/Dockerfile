@@ -1,10 +1,13 @@
-FROM golang:1.22 AS builder
+FROM golang:1.22 as builder
 
-COPY . /src
 WORKDIR /src
 
-RUN GOPROXY=https://proxy.golang.org,direct make build
+COPY go.mod go.sum ./
+RUN go mod download
 
+COPY . .
+
+RUN GOPROXY=https://proxy.golang.org,direct make build
 
 FROM debian:stable-slim
 
