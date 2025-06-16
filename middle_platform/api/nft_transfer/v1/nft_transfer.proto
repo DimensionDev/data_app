@@ -126,6 +126,7 @@ message PostReportSpamRequest {
 	optional string update_by = 7;  // Format: same as create_by
 	optional string data_source = 8; // Default: simplehash, Enum: "nftscan"
 	optional string collection_info = 9; // JSON string for extra collection info
+	optional string api_source = 10; // Source of the API request
 }
 
 message PostReportSpamReply {
@@ -145,6 +146,7 @@ message SpamReport {
 	optional string name = 8;
 	optional string collection_url = 9[json_name = "collection_url"];
 	optional string detail = 10;
+	optional string api_source = 11[json_name = "api_source"];
 }
 
 message GetReportSpamRequest {

@@ -340,7 +340,7 @@ func reportSpamToNftScan(collection_id string) error {
 
 }
 
-func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string, create_by *string, update_by *string, status string, collectionInfo *string) (*pb.PostReportSpamReply, error) {
+func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string, create_by *string, update_by *string, status string, collectionInfo *string, api_source *string) (*pb.PostReportSpamReply, error) {
 	if status != "reporting" && status != "approved" && status != "rejected" {
 		return &pb.PostReportSpamReply{
 			Code:    400,
@@ -352,9 +352,9 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 	final_status := status
 	var final_source string
 	if req_source != nil && *req_source != "" {
-		final_source = *req_source + ":nftscan"
+		final_source = *req_source
 	} else {
-		final_source = "nftscan"
+		final_source = "firefly"
 	}
 
 	nowUTC := time.Now().UTC()
@@ -367,7 +367,7 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 		updateByStr = *update_by
 	}
 
-	query_str := fmt.Sprintf("SELECT collection_id, status, create_at, update_at, source, create_by, update_by FROM spam_report WHERE collection_id = '%s' ORDER BY update_at DESC LIMIT 1", collection_id)
+	query_str := fmt.Sprintf("SELECT collection_id, status, create_at, update_at, source, create_by, update_by, api_source FROM spam_report WHERE collection_id = '%s' ORDER BY update_at DESC LIMIT 1", collection_id)
 	existing_res, query_err := r.data.data_query_single(query_str)
 
 	var insert_str string
@@ -386,9 +386,10 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 			source        sql.NullString
 			create_by     sql.NullString
 			update_by     sql.NullString
+			api_source    sql.NullString
 		}
 		var exRt existingReport
-		if err := existing_res.Scan(&exRt.collection_id, &exRt.status, &exRt.create_at, &exRt.update_at, &exRt.source, &exRt.create_by, &exRt.update_by); err == nil {
+		if err := existing_res.Scan(&exRt.collection_id, &exRt.status, &exRt.create_at, &exRt.update_at, &exRt.source, &exRt.create_by, &exRt.update_by, &exRt.api_source); err == nil {
 			hasRecord = true
 			prev_status = exRt.status
 			prev_create_at = string(exRt.create_at)
@@ -400,12 +401,14 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 		}
 	}
 
+	apiSourceValue := getApiSourceValue(api_source)
+
 	if hasRecord {
 		if prev_status == "reporting" {
 			if final_status == "reporting" {
 				// 只更新 update_at 和 update_by
-				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
-					collection_id, prev_status, prev_create_at, update_at, final_source, prev_create_by, updateByStr)
+				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by, api_source) VALUES ('%s','%s','%s','%s','%s','%s','%s',%s)",
+					collection_id, prev_status, prev_create_at, update_at, final_source, prev_create_by, updateByStr, apiSourceValue)
 			} else if final_status == "approved" {
 				// 只有 approved 时才调用 reportSpamToNftScan
 				report_err := reportSpamToNftScan(collection_id)
@@ -418,19 +421,19 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 					}, nil
 				}
 				create_at_str = prev_create_at
-				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
-					collection_id, final_status, create_at_str, update_at, final_source, prev_create_by, updateByStr)
+				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by, api_source) VALUES ('%s','%s','%s','%s','%s','%s','%s',%s)",
+					collection_id, final_status, create_at_str, update_at, final_source, prev_create_by, updateByStr, apiSourceValue)
 			} else if final_status == "rejected" {
 				create_at_str = prev_create_at
-				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
-					collection_id, final_status, create_at_str, update_at, final_source, prev_create_by, updateByStr)
+				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by, api_source) VALUES ('%s','%s','%s','%s','%s','%s','%s',%s)",
+					collection_id, final_status, create_at_str, update_at, final_source, prev_create_by, updateByStr, apiSourceValue)
 			}
 		} else if prev_status == "rejected" {
 			if final_status == "reporting" {
 				// rejected 可以再次 reporting，插入新 reporting 记录
 				create_at_str = update_at
-				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
-					collection_id, final_status, create_at_str, update_at, final_source, createByStr, updateByStr)
+				insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by, api_source) VALUES ('%s','%s','%s','%s','%s','%s','%s',%s)",
+					collection_id, final_status, create_at_str, update_at, final_source, createByStr, updateByStr, apiSourceValue)
 			} else {
 				// rejected 状态不能流转到非 reporting
 				return &pb.PostReportSpamReply{
@@ -464,8 +467,8 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 			}, nil
 		}
 		create_at_str = update_at
-		insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by) VALUES ('%s','%s','%s','%s','%s','%s','%s')",
-			collection_id, final_status, create_at_str, update_at, final_source, createByStr, updateByStr)
+		insert_str = fmt.Sprintf("INSERT INTO spam_report (collection_id, status, create_at, update_at, source, create_by, update_by, api_source) VALUES ('%s','%s','%s','%s','%s','%s','%s',%s)",
+			collection_id, final_status, create_at_str, update_at, final_source, createByStr, updateByStr, apiSourceValue)
 	}
 
 	if insert_str != "" {
@@ -479,7 +482,7 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 		}
 	}
 
-	final_query_str := fmt.Sprintf("SELECT collection_id, status, create_at, update_at, source, create_by, update_by FROM spam_report WHERE collection_id = '%s' ORDER BY update_at DESC LIMIT 1", collection_id)
+	final_query_str := fmt.Sprintf("SELECT collection_id, status, create_at, update_at, source, create_by, update_by, api_source FROM spam_report WHERE collection_id = '%s' ORDER BY update_at DESC LIMIT 1", collection_id)
 	final_res, final_err := r.data.data_query_single(final_query_str)
 	if final_err != nil {
 		log.Errorf("Failed to fetch final spam report for %s: %v", collection_id, final_err)
@@ -499,9 +502,10 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 		source        sql.NullString
 		create_by     sql.NullString
 		update_by     sql.NullString
+		api_source    sql.NullString
 	}
 	var dbRt dbReport
-	if err := final_res.Scan(&dbRt.collection_id, &dbRt.status, &dbRt.created_at, &dbRt.updated_at, &dbRt.source, &dbRt.create_by, &dbRt.update_by); err != nil {
+	if err := final_res.Scan(&dbRt.collection_id, &dbRt.status, &dbRt.created_at, &dbRt.updated_at, &dbRt.source, &dbRt.create_by, &dbRt.update_by, &dbRt.api_source); err != nil {
 		log.Errorf("Failed to scan final report for %s: %v", collection_id, err)
 		return &pb.PostReportSpamReply{
 			Code:    500,
@@ -528,6 +532,10 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 		ubStr := dbRt.update_by.String
 		fetched_report.UpdateBy = &ubStr
 	}
+	if dbRt.api_source.Valid {
+		apiSrcStr := dbRt.api_source.String
+		fetched_report.ApiSource = &apiSrcStr
+	}
 
 	// 在 status==reporting 时解析 collection_info 并写入 spam_collection_info
 	if err := insertSpamCollectionInfoIfPresent(r, collection_id, status, collectionInfo); err != nil {
@@ -540,9 +548,17 @@ func (r *NftTransferRepo) reportSpamV2(collection_id string, req_source *string,
 
 	return &pb.PostReportSpamReply{
 		Code:    200,
-		Message: "Reported and database updated.",
+		Message: "success",
 		Data:    &fetched_report,
 	}, nil
+}
+
+// Helper function to get API source value for SQL
+func getApiSourceValue(api_source *string) string {
+	if api_source == nil || *api_source == "" {
+		return "NULL"
+	}
+	return fmt.Sprintf("'%s'", escapeSQLString(*api_source))
 }
 
 // Helper function to format DB timestamp bytes to RFC3339 string
@@ -561,6 +577,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 	collection_id := req.CollectionId
 	next_status := req.Status
 	req_source := req.Source
+	api_source := req.ApiSource
 	var source string
 	if req_source == nil || *req_source == "" {
 		source = "firefly"
@@ -573,7 +590,7 @@ func (r *NftTransferRepo) PostSpamReport(ctx context.Context, req *pb.PostReport
 		}
 	}
 
-	return r.reportSpamV2(collection_id, &source, req.CreateBy, req.UpdateBy, next_status, req.CollectionInfo)
+	return r.reportSpamV2(collection_id, &source, req.CreateBy, req.UpdateBy, next_status, req.CollectionInfo, api_source)
 }
 
 // 在 status==reporting 时解析 collection_info 并写入 spam_collection_info
@@ -722,7 +739,6 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	collection_id_str := ""
 	if req.CollectionId != "" {
 		collection_id_str = combineAndRemoveDuplicates("collection_id", strings.Split(req.CollectionId, ","))
-		// collection_id_str = fmt.Sprintf(" collection_id in ('%s')", req.CollectionId)
 	}
 	status_str := ""
 	if req.Status != "" {
@@ -753,7 +769,6 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		page = req.Page
 	}
 
-	// cursor_str := strconv.FormatUint(uint64(req.Cursor), 10)
 	var limit uint32
 	if req.Limit == uint32(0) {
 		limit = uint32(100)
@@ -768,7 +783,7 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 
 	order_str := "order by update_at desc"
 	query_str := fmt.Sprintf(
-		"select collection_id,status,create_at,update_at,source,create_by,update_by from spam_report %s %s %s",
+		"select collection_id,status,create_at,update_at,source,create_by,update_by,api_source from spam_report %s %s %s",
 		condition_str, order_str, cursor_limit_str)
 
 	total_query_str := fmt.Sprintf("select count(1) from spam_report %s ", condition_str)
@@ -781,7 +796,6 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		}, err
 	}
 	fmt.Println("total count:", total_count)
-	// current_page := cursor / limit + 1
 
 	fmt.Println("query str:", query_str)
 	res, err := r.data.data_query(query_str)
@@ -801,7 +815,7 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 	var collectionIDs []string
 	for res.Next() {
 		var tmpID string
-		if err := res.Scan(&tmpID, new(string), new([]uint8), new([]uint8), new(sql.NullString), new(sql.NullString), new(sql.NullString)); err == nil {
+		if err := res.Scan(&tmpID, new(string), new([]uint8), new([]uint8), new(sql.NullString), new(sql.NullString), new(sql.NullString), new(sql.NullString)); err == nil {
 			if _, exists := collectionIDSet[tmpID]; !exists {
 				collectionIDSet[tmpID] = struct{}{}
 				collectionIDs = append(collectionIDs, tmpID)
@@ -861,8 +875,9 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 			source        sql.NullString
 			create_by     sql.NullString
 			update_by     sql.NullString
+			api_source    sql.NullString
 		}
-		if err := res.Scan(&rt.collection_id, &rt.status, &rt.create_at, &rt.update_at, &rt.source, &rt.create_by, &rt.update_by); err != nil {
+		if err := res.Scan(&rt.collection_id, &rt.status, &rt.create_at, &rt.update_at, &rt.source, &rt.create_by, &rt.update_by, &rt.api_source); err != nil {
 			log.Error("failed to scan row err = ", err)
 			return nil, err
 		}
@@ -899,8 +914,12 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 			ubStr := rt.update_by.String
 			spam_report.UpdateBy = &ubStr
 		}
+		if rt.api_source.Valid {
+			apiSrcStr := rt.api_source.String
+			spam_report.ApiSource = &apiSrcStr
+		}
 		// 批量map取值
-		if info, ok := infoMap[rt.collection_id]; ok {
+		if info, exists := infoMap[rt.collection_id]; exists {
 			spam_report.Name = info.name
 			spam_report.CollectionUrl = info.url
 			spam_report.Detail = info.detail
@@ -908,14 +927,13 @@ func (r *NftTransferRepo) GetSpamReport(ctx context.Context, req *pb.GetReportSp
 		report_list = append(report_list, &spam_report)
 	}
 
-	var result pb.GetReportSpamReply
-	result.Code = 200
-	result.Limit = limit
-	result.Data = report_list
-	result.Page = page
-	result.Total = total_count
-
-	return &result, nil
+	return &pb.GetReportSpamReply{
+		Code:  200,
+		Page:  page,
+		Limit: limit,
+		Total: total_count,
+		Data:  report_list,
+	}, nil
 }
 
 func (r *NftTransferRepo) GetTotalNumberOfSpamReport(query_str string) (uint64, error) {
